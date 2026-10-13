@@ -21,7 +21,8 @@ import livepanel as lp
 
 CANVAS_PRESETS = ["4:5", "3:4", "1:1"]
 THEMES = ["terminal-dark", "light-pastel"]
-VIEW_KINDS = ["nebula", "timeline", "funnel", "tree", "ring", "kpi"]
+VIEW_KINDS = sorted({"nebula", "timeline", "funnel", "tree", "ring", "kpi"} |
+                    {f.stem for f in (Path(__file__).resolve().parent.parent / "assets" / "views").glob("*.js") if not f.name.startswith("_")})
 QUICK_COMBO = ("4x5_light-pastel", "4:5", "light-pastel")
 
 
@@ -34,7 +35,8 @@ def select_combos(args):
         return [QUICK_COMBO]
     if args.combos == "cur":
         return [("cur", None, None)]
-    return [(combo_name(p, t), p, t) for p in CANVAS_PRESETS for t in THEMES]
+    # the config exactly as written, then the 6 forced canvas x theme combos
+    return [("cur", None, None)] + [(combo_name(p, t), p, t) for p in CANVAS_PRESETS for t in THEMES]
 
 
 def make_combo_config(cfg, preset, theme):
@@ -78,6 +80,8 @@ def schema_check(cfg):
     if not isinstance(els, list):
         msgs.append('"elements" must be an array')
         return msgs
+    if not any(isinstance(e, dict) and e.get("type") == "view" for e in els):
+        msgs.append('no {"type":"view"} element — verify_view.py accepts views only; use check_frames.py for hand-placed panels')
     for i, e in enumerate(els):
         if not isinstance(e, dict) or e.get("type") != "view":
             continue
@@ -184,7 +188,7 @@ function bgSVG(el){var r=cv(el.getBoundingClientRect()),best=null,ba=0;
     var br=cv(b.getBoundingClientRect());
     var cx=(r.l+r.r)/2,cy=(r.t+r.b)/2;
     if(cx>br.l&&cx<br.r&&cy>br.t&&cy<br.b){
-      var c=parseC(getComputedStyle(b).backgroundColor)||(b.tagName==='rect'?parseC(getComputedStyle(b).fill):null);
+      var isS=b.namespaceURI==='http://www.w3.org/2000/svg'; var c=isS?parseC(getComputedStyle(b).fill):parseC(getComputedStyle(b).backgroundColor); if(c&&c[3]<=0.001)c=null;
       if(c&&c[3]>ba){ba=c[3];best=c}}});
   if(!best)best=parseC(getComputedStyle(ST).backgroundColor)||[0,0,0,1];
   return best}
@@ -396,7 +400,7 @@ def run_rules(br, config_path, cfg, out_dir, template):
                 if sigs[k][idx] != prev:
                     changes.append(steps[k])
                     prev = sigs[k][idx]
-            fast = [changes[j] for j in range(1, len(changes)) if changes[j] - changes[j - 1] < 0.4]
+            fast = [changes[j] for j in range(1, len(changes)) if changes[j] - changes[j - 1] < 0.4 - 1e-6]
             if fast:
                 m = metas[idx] if idx < len(metas) else {"tag": "?", "dt": "?", "txt": ""}
                 rules["flicker"].append({

@@ -43,6 +43,8 @@ b,.b{font-weight:700}
 </style><!--LIVE_FONTS--></head><body>
 <div id="stage"></div>
 <!--LIVE_CONFIG-->
+<script>window.LP=window.LP||{_q:[],registerView:function(k,i){this._q.push([k,i])}};</script>
+<!--LIVE_VIEWS-->
 <script>
 (function(){
 'use strict';
@@ -286,9 +288,12 @@ var B={
 var TA=[], LOG=null, BOXES=[], PATHS=[], TH={};
 // ---------- views (auto-laid-out diagrams; see references/views.md) ----------
 var VIEW_IMPL={}, VIEWS=[], MCTX=null;
-window.LP={registerView:function(kind,impl){VIEW_IMPL[kind]=impl},
+var LPQ=(window.LP&&window.LP._q)||[];
+window.LP={registerView:function(kind,impl){ if(VIEW_IMPL[kind]) fail(new Error('view kind "'+kind+'" registered twice')); VIEW_IMPL[kind]=impl},
   ease:{inOut:function(x){x=Math.max(0,Math.min(1,x));return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2},out:function(x){x=Math.max(0,Math.min(1,x));return 1-Math.pow(1-x,3)},smooth:function(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)}}};
-function vMeasure(text,px,font,bold){ if(!MCTX) MCTX=document.createElement('canvas').getContext('2d'); MCTX.font=(bold?'700 ':'')+px+'px '+(font||TH.font); return MCTX.measureText(String(text)).width; }
+LPQ.forEach(function(q){window.LP.registerView(q[0],q[1])});
+function vFont(f){ f=f||TH.font; return String(f).replace('var(--font-title)',TH.titleFont||TH.font).replace('var(--font)',TH.font); }
+function vMeasure(text,px,font,bold){ if(!MCTX) MCTX=document.createElement('canvas').getContext('2d'); MCTX.font=(bold?'700 ':'')+px+'px '+vFont(font); return MCTX.measureText(String(text)).width; }
 function vFit(text,px,maxW,font,minPx,bold){ text=String(text); minPx=minPx||11; var sz=px;
   while(sz>minPx&&vMeasure(text,sz,font,bold)>maxW) sz-=0.5;
   if(vMeasure(text,sz,font,bold)<=maxW) return {text:text,size:sz};
@@ -315,7 +320,7 @@ function viewCtx(v){
 function buildViews(){
   VIEWS.forEach(function(v){ var impl=VIEW_IMPL[v.kind]; if(!impl) throw new Error('unknown view kind "'+v.kind+'" (is assets/views/'+v.kind+'.js inlined?)');
     v.impl=impl; v.ctx=viewCtx(v); v.state=impl.build(v.ctx); });
-  if(VIEWS.length){ var D=(cfg.canvas&&cfg.canvas.duration)||60, lo=-120, hi=D+120, add=[];
+  if(VIEWS.length){ var D=(cfg.canvas&&cfg.canvas.duration)||30, lo=-120, hi=D+120, add=[];
     VIEWS.forEach(function(v){ if(v.impl.events) add=add.concat(v.impl.events.call(v.impl,lo,hi,v.ctx)||[]) });
     if(add.length){ EVT=EVT.concat(add); EVT=EVT.map(function(e,i){e.__i=i;return e}).sort(function(a,b){return a.t-b.t||a.__i-b.__i}); } }
 }
@@ -375,7 +380,7 @@ window.__check=function(){
   var els=ST.querySelectorAll('[data-t]');
   for(var i=0;i<els.length;i++){ var el=els[i], k=el.getAttribute('data-t');
     if(k==='edge') continue;
-    if(getComputedStyle(el).display==='none'||(el.closest&&el.closest('[style*="display: none"]'))) continue;
+    if(!el.getClientRects().length) continue;
     if(k==='box'||k==='frame'){ boxes.push({el:el,r:R(el.getBoundingClientRect()),k:k}); continue; }
     if(el.getAttribute('data-nocheck')) continue;
     var cr=contentRect(el); if(!cr) continue; var rr=R(cr); rr.el=el; rr.txt=el.textContent.trim().slice(0,28);
@@ -432,10 +437,12 @@ function boot(c){
   (c.elements||[]).forEach(function(e){ var f=B[e.type]; if(!f) throw new Error('unknown element type '+e.type); f(e); });
   if(c.credit){ B.text(Object.assign({type:'text',x:0,w:CW,align:'center',y:CH-14,size:12,c:'dim'},c.credit)); }
   fit(); addEventListener('resize',fit);
+  var fontsFor=function(){ if(!VIEWS.length||!document.fonts||!document.fonts.load) return Promise.resolve(); var f=TH.titleFont||TH.font;
+    return Promise.all(['20px '+f,'700 20px '+f,'20px '+TH.font,'700 20px '+TH.font].map(function(q){return document.fonts.load(q).catch(function(){})})); };
   var go=function(){ try{ buildViews(); }catch(e){ fail(e); } window.__ready=true; window.seek(window.__pending==null?0:window.__pending);
     if(!/[?&]manual/.test(location.search)){ var t0=performance.now(), D=cv.duration||30; (function loop(now){ window.seek(((now-t0)/1000)%D); requestAnimationFrame(loop); })(t0); } };
-  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(go);
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(fontsFor).then(go);
 }
 loadConfig().then(boot).catch(fail);
 })();
-</script><!--LIVE_VIEWS--></body></html>
+</script></body></html>
