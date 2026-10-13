@@ -157,3 +157,17 @@ verify_view.py renders the config in all 6 combos (3 canvases x 2 themes), runs 
 (--repeat) on each, the rule checks above, and writes 3 screenshots per combo + report.json.
 Exit 0 = pass. Do NOT render mp4 (render.py) — the orchestrator does that. Keep Chrome runs few:
 the machine has 2 CPUs shared with others.
+
+## 8. Core notes (as implemented in assets/template.html)
+
+- `impl.build(ctx)`, `impl.seek(t, ctx)`, `impl.events(lo, hi, ctx)`, `impl.check(ctx)` are all called with
+  `this === impl`. A config may contain several views of different kinds; assume at most one view of
+  the same kind per config, and keep state in closure variables or on `this`.
+- `ctx.measure(text, px, font?, bold?)`, `ctx.fit(text, px, maxW, font?, minPx=11, bold?)` -> `{text, size}`.
+- `ctx.dark` is true unless `theme.preset == "light-pastel"`. `ctx.TH.titleFont` is a full CSS font stack
+  (Smiley Sans first when `theme.titleFont:"smiley"`); in CSS use `var(--font-title)` / `var(--font)`.
+- The view root is appended to the stage in config order *before* fonts are ready; `build` runs after
+  `document.fonts.ready`, so measuring text in build is reliable.
+- Hidden nodes (`display:none`) are skipped by the layout checker, so show/hide in seek is safe.
+- The checker treats every `mark`ed 'box' pair as a potential overlap: do not mark decorative halos or
+  glows as 'box'; mark only the cards/nodes that must not touch.
