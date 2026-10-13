@@ -70,7 +70,8 @@ events `{t, who, c, m, g}` (same shape machines emit) so a `log` element can nar
 
 Base: `bg bar line line2 dim fg wh dots hl`. New semantic names added by the core:
 `acc1..acc6` (strong accents), `accf1..accf6` (soft fills / tints for cards & halos),
-`panel` (card background slightly off bg), `grid` (faint grid/rail lines), `ok warn bad` (status).
+`panel` (card background slightly off bg), `grid` (faint grid/rail lines), `ok warn bad` (status),
+`muted` (secondary text that still passes 4.5:1 on bg/panel in both themes — the legacy `dim` does not on light-pastel).
 Use only these names (via ctx.cc / ctx.col) so both themes work. Never hard-code hex colours.
 Dark theme look: monospace, glow, thin lines, near-black bg. Light look: white, pastel fills,
 rounded cards, soft shadows, gentle motion.
