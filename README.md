@@ -193,7 +193,7 @@ If you reference this project, see [`CITATION.cff`](CITATION.cff) (GitHub shows 
 
 ## License
 
-MIT for the code (see `LICENSE`). The visual design that `examples/codex-agents/` recreates belongs to @thedelost, and the infographic re-animated in `examples/agent-architecture/` belongs to 小红书 @林纾; those examples are credit-bearing recreations and are not covered by the MIT grant. Airbnb figures are Airbnb's own statements from a public interview.
+MIT for the code (see `LICENSE`; carve-outs for the recreated example designs are in `NOTICE`). The visual design that `examples/codex-agents/` recreates belongs to @thedelost, and the infographic re-animated in `examples/agent-architecture/` belongs to 小红书 @林纾; those examples are credit-bearing recreations and are not covered by the MIT grant. Airbnb figures are Airbnb's own statements from a public interview.
 
 ---
 
