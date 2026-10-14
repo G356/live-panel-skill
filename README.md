@@ -101,7 +101,7 @@ Besides free-form boxes and wires, a config can hold `{"type":"view","kind":...}
 | what you want to show | view | status |
 | --- | --- | --- |
 | a loop that repeats (agent plan→act→verify, PDCA, release cycle) | `ring` - 3-8 steps on a circle, comet, lap counter | ready (`examples/ring/`) |
-| how many survive each stage (bug→merged PR, signup→paid) | `funnel` - widths proportional to values, conversion % between stages | ready (`examples/funnel/`) |
+| how many survive each stage (bug→merged PR, signup→paid) | `funnel` - widths proportional to values, conversion % between stages | ready (`examples/funnel/`; log widths + one-accent palette for population-scale data: `examples/funnel-karpathy/`) |
 | who relates to whom, clusters of a knowledge base or ecosystem | `nebula` - force layout by group, halos, packets on strong edges | planned |
 | work over time, parallel tracks, dependencies | `timeline` - lanes, playhead, done/active/pending | planned |
 | a hierarchy (agent → sub-agents → tools, org chart) | `tree` - tidy tree, expand/collapse without layout jumps | planned |
@@ -153,7 +153,7 @@ The page exposes `window.seek(t)`. Every visual is a pure function of `t`; the f
 
 ## Fonts
 
-No font files are bundled. The stacks fall back through installed fonts: terminal themes use JetBrains Mono (OFL) -> IBM Plex Mono (OFL) -> DejaVu Sans Mono -> Noto Sans Mono CJK SC (OFL) -> any monospace; light-pastel uses Noto Sans CJK SC (OFL) / PingFang SC / Microsoft YaHei -> Helvetica/Arial, and Noto Serif CJK SC for the big title. Install JetBrains Mono and Noto CJK for the exact look in the examples; emoji icons need a colour emoji font (e.g. Noto Color Emoji). Different fonts change glyph widths slightly, so re-run `check_frames.py` after changing fonts.
+One font is bundled: 得意黑 Smiley Sans (OFL, `assets/fonts/`), embedded into the page only when a config sets `theme.titleFont: "smiley"` (used by the view examples for titles and big numbers). Everything else falls back through installed fonts: terminal themes use JetBrains Mono (OFL) -> IBM Plex Mono (OFL) -> DejaVu Sans Mono -> Noto Sans Mono CJK SC (OFL) -> any monospace; light-pastel uses Noto Sans CJK SC (OFL) / PingFang SC / Microsoft YaHei -> Helvetica/Arial, and Noto Serif CJK SC for the big title. Install JetBrains Mono and Noto CJK for the exact look in the examples; emoji icons need a colour emoji font (e.g. Noto Color Emoji). Different fonts change glyph widths slightly, so re-run `check_frames.py` after changing fonts.
 
 ## Self-test results (this repo, Chrome 154, ffmpeg 7.1)
 
@@ -232,7 +232,7 @@ MIT for the code (see `LICENSE`; carve-outs for the recreated example designs ar
 | 想表达 | 用哪个视图 | 状态 |
 | --- | --- | --- |
 | 循环往复的流程（agent 规划→执行→验证→反思、PDCA、发版周期） | `ring` 环形 | 已完成 |
-| 每一步还剩多少（Bug→合并 PR、注册→付费） | `funnel` 漏斗 | 已完成 |
+| 每一步还剩多少（Bug→合并 PR、注册→付费） | `funnel` 漏斗 | 已完成（跨数量级的真实数据用对数宽度 + 单色重点：`examples/funnel-karpathy/`） |
 | 谁和谁有关系、知识库/生态的聚类 | `nebula` 星云/关系图谱 | 待做 |
 | 随时间推进、多条并行泳道、依赖 | `timeline` 时间线/泳道 | 待做 |
 | 层级结构（主 agent→子 agent→工具、组织架构） | `tree` 层级树 | 待做 |

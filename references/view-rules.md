@@ -12,7 +12,7 @@ R5 [lint] Connectors (`mark` 'edge') end on card borders and never cross another
 R6 [lint] No toggle faster than 0.4 s; highlights last ≥ 0.8 s.
 R7 [lint] Content fills ≥70% of rect width and ≥60% of height, balanced left/right margins.
 R8 Derive every size from rect (`u = Math.min(w,h)/100`); a constant tuned on 4:5 breaks 1:1.
-R9 Only theme colour names (acc1..6, accf1..6, fg, dim, panel, grid, ok, warn, bad, bg, line); no hex in view code.
+R9 Only theme colour names (acc1..6, accf1..6, fg, muted, dim, panel, grid, ok, warn, bad, bg, line, line2); no hex in view code.
 R10 Numbers shown twice come from one variable (one truth); simulated numbers are labelled illustrative in `credit`.
 R11 Seamless loop: every sub-period divides `period` (and canvas.duration is a multiple of `period`), so seek(0) and seek(duration) look the same. (from senior review, 20:58)
 R12 Frame 0 is a cover: at t=0 there is already one highlighted focus and no "not started yet" empty state (platforms use the first frame as thumbnail).

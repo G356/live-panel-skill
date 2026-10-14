@@ -1,5 +1,5 @@
 // live-panel view: funnel — pipeline / conversion chart
-// Self-registers via LP.registerView. See docs/views/funnel.md.
+// Self-registers via LP.registerView. Contract and config keys: references/views.md.
 (function(){
   var NS = 'http://www.w3.org/2000/svg';
 
@@ -20,11 +20,18 @@
 
   function fmtNum(v){
     // compact for population-scale numbers: 8B, 1.5B, 20M; commas below a million
+    // thresholds sit where the rounded value reaches the next unit (999,960,000 -> 1B, not 1000M)
     var a = Math.abs(v);
-    if(a >= 1e9) return String(Math.round(v/1e8)/10) + 'B';
-    if(a >= 1e6) return String(Math.round(v/1e5)/10) + 'M';
+    if(a >= 9.9995e8) return String(Math.round(v/1e8)/10) + 'B';
+    if(a >= 999999.5) return String(Math.round(v/1e5)/10) + 'M';
     var s = String(Math.round(v));
     return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function fmtPct(p){
+    // String() switches to exponent notation below 1e-6 (8B -> 5 is 6.3e-8 %)
+    var s = String(p);
+    return s.indexOf('e') < 0 ? s : p.toFixed(1 - Math.floor(Math.log10(p)));
   }
 
   LP.registerView('funnel', {
@@ -37,16 +44,17 @@
       var n = stages.length;
 
       // ---- title block (drawn inside root) ----
-      var titleH = 0, subH = 0;
+      var topPad = Math.round(u*2), botPad = Math.round(u*1.5);
+      var titleH = topPad, subH = 0;
       if(e.title){
         var titleSize = Math.max(22, Math.min(u*3.2, 46));
         var titleLh = Math.round(titleSize*1.25);
         var titleEl = el('div', null,
-          'position:absolute;left:0;right:0;top:0;height:'+titleLh+'px;line-height:'+titleLh+'px;text-align:center;font-family:var(--font-title);font-size:'+titleSize+'px;font-weight:700;color:'+ctx.cc('fg')+';white-space:pre;');
+          'position:absolute;left:0;right:0;top:'+topPad+'px;height:'+titleLh+'px;line-height:'+titleLh+'px;text-align:center;font-family:var(--font-title);font-size:'+titleSize+'px;font-weight:700;color:'+ctx.cc('fg')+';white-space:pre;');
         titleEl.textContent = e.title;
         ctx.mark(titleEl,'text');
         root.appendChild(titleEl);
-        titleH = titleLh;
+        titleH += titleLh;
       }
       if(e.subtitle){
         var subSize = Math.max(13, Math.min(u*1.6, 19));
@@ -64,7 +72,7 @@
       // ---- layout ----
       var marginX = Math.round(u*5);
       var bodyTop = headH;
-      var bodyH = h - headH;
+      var bodyH = h - headH - botPad;
       var bodyW = w - marginX*2;
       var cy = bodyTop + bodyH/2;
 
@@ -98,8 +106,10 @@
       // palette: default one accent per stage; "mono" = one quiet accent, the focus stage (default last) in a hot accent
       var mono = e.palette === 'mono';
       var focusI = (typeof e.focus === 'number') ? e.focus : n-1;
-      function stAcc(i){ return mono ? (i===focusI ? 'acc2' : 'acc1') : ctx.acc(i); }
-      function stAccf(i){ return mono ? (i===focusI ? 'accf2' : 'accf1') : ctx.accf(i); }
+      // the focus accent must stand apart from acc1 in both themes; dark acc2 is a blue next to cyan acc1
+      var hot = dark ? 6 : 2;
+      function stAcc(i){ return mono ? (i===focusI ? 'acc'+hot : 'acc1') : ctx.acc(i); }
+      function stAccf(i){ return mono ? (i===focusI ? 'accf'+hot : 'accf1') : ctx.accf(i); }
 
       // centre X of funnel
       var cx = w/2;
@@ -110,8 +120,7 @@
       root.appendChild(svgEl);
 
       // ---- build each stage ----
-      var state = {stages:stages, n:n, period:e.period||18, parts:[], highlight:null,
-                   seekRefs:{}, stageGroups:[], convTexts:[], stageCy:stageCy, stageH:stageH, stageGap:stageGap};
+      var state = {n:n, period:e.period||18};
 
       // Glow filter for dark mode (thin, crisp)
       var defs = svg(ctx,'defs',{});
@@ -132,9 +141,6 @@
       // Simpler: each stage i drawn as a trapezoid with
       //   topW = barW(stages[i].value), bottomW = barW(i<n-1? stages[i+1].value : stages[i].value*0.98)
       // Then small separator gap.
-      var traps = [];
-      var fills = [];
-      var strokes = [];
       stages.forEach(function(s,i){
         var yTop = stageCy[i] - stageH/2;
         var yBot = stageCy[i] + stageH/2;
@@ -157,27 +163,17 @@
         });
         ctx.mark(poly, 'box');
         svgEl.appendChild(poly);
-        traps.push({el:poly, tw:tw, bw:bw, yTop:yTop, yBot:yBot, acc:acc, accf:accf});
       });
 
       // Connectors (subtle vertical lines between stages, routed around trapezoid sides)
       // Using a subtle dotted guide for each inter-stage gap on left/right edges
-      var guides = [];
       for(var i=0;i<n-1;i++){
-        var yTop = stageCy[i] + stageH/2;
-        var yBot = stageCy[i+1] - stageH/2;
-        var topbw = barW(stages[i+1].value);
-        var botbw = barW(stages[i+1].value);
-        // short vertical tick on both sides in dim
-        (function(y1,y2){
-          var ln = svg(ctx,'line',{
-            x1:cx, y1:y1, x2:cx, y2:y2,
-            stroke: ctx.cc('grid'), 'stroke-width':'1', 'stroke-dasharray':'2 3'
-          });
-          ln.setAttribute('data-t','edge');
-          svgEl.appendChild(ln);
-          guides.push(ln);
-        })(yTop,yBot);
+        var ln = svg(ctx,'line',{
+          x1:cx, y1:stageCy[i] + stageH/2, x2:cx, y2:stageCy[i+1] - stageH/2,
+          stroke: ctx.cc('grid'), 'stroke-width':'1', 'stroke-dasharray':'2 3'
+        });
+        ctx.mark(ln,'edge');
+        svgEl.appendChild(ln);
       }
 
       // Labels (HTML for reliable CJK rendering)
@@ -191,7 +187,7 @@
       var valSize = Math.max(14, Math.min(u*2.0*vs, 22*vs));
       var valLh = Math.round(valSize*1.3);
 
-      var stageLabels = stages.map(function(s,i){
+      stages.forEach(function(s,i){
         var yTop = stageCy[i] - stageH/2;
         // label (left-aligned, to the left of bar area)
         var labelX = marginX;
@@ -214,12 +210,10 @@
         // value (right-aligned, to the right of bar area)
         var valX = w - marginX - valW;
         var valBox = el('div', null,
-          'position:absolute;left:'+valX+'px;top:'+Math.round(stageCy[i]-valLh/2)+'px;width:'+valW+'px;height:'+valLh+'px;line-height:'+valLh+'px;text-align:right;font-family:'+(dark?'var(--font)':'var(--font)')+';font-size:'+valSize+'px;font-variant-numeric:tabular-nums;color:'+ctx.cc('fg')+';font-weight:700;white-space:pre;');
+          'position:absolute;left:'+valX+'px;top:'+Math.round(stageCy[i]-valLh/2)+'px;width:'+valW+'px;height:'+valLh+'px;line-height:'+valLh+'px;text-align:right;font-family:var(--font);font-size:'+valSize+'px;font-variant-numeric:tabular-nums;color:'+ctx.cc('fg')+';font-weight:700;white-space:pre;');
         valBox.textContent = fmtNum(s.value);
         ctx.mark(valBox,'text');
         root.appendChild(valBox);
-
-        return {box:labelBox, l1:l1, l2:l2, val:valBox};
       });
 
       // Conversion % between stages (small pill)
@@ -227,7 +221,6 @@
       var convPillH = convPillH0;
       var convSize = Math.max(11, Math.min(u*1.3, 14));
       var convLh = convPillH;
-      var convs = [];
       for(var i=0;i<n-1;i++){
         var prevV = stages[i].value;
         var r = prevV>0 ? stages[i+1].value/prevV*100 : null;   // 0 -> 0 has no rate
@@ -247,10 +240,9 @@
         // HTML text for the conversion % (centered over pill)
         var cBox = el('div', null,
           'position:absolute;left:'+(pillX)+'px;top:'+pillY+'px;width:'+convPillW+'px;height:'+convLh+'px;line-height:'+convLh+'px;text-align:center;font-size:'+convSize+'px;color:'+ctx.cc('fg')+';font-weight:600;white-space:pre;font-variant-numeric:tabular-nums;');
-        cBox.textContent = (pct==null ? '—' : pct+'%');
+        cBox.textContent = (pct==null ? '—' : fmtPct(pct)+'%');
         ctx.mark(cBox,'text');
         root.appendChild(cBox);
-        convs.push({pill:pill, text:cBox, pct:pct, y:y});
       }
 
       // ---- particles: fast tempo, flowing down the funnel centre ----
@@ -303,17 +295,10 @@
       });
 
       // Save refs for seek
-      state.traps = traps;
-      state.convs = convs;
       state.pk = PKG;
       state.hiRects = hiRects;
-      state.stageLabels = stageLabels;
-      state.valSize = valSize;
       state.cx = cx;
-      state.barW = barW;
       state.dark = dark;
-      state.u = u;
-      state.ctx = ctx;
       return state;
     },
 
@@ -343,17 +328,11 @@
       s.hiRects.forEach(function(r,i){
         var op = 0;
         if(i===focusI){
-          // ramp in 0..0.15, hold, ramp out 0.85..1
           op = phaseInStage>0.9 ? (1-phaseInStage)/0.1 : 1;   // lit from frame 0, fades out before the next
           op *= s.dark? 0.22 : 0.55;
         }
         r.setAttribute('opacity', op.toFixed(3));
       });
-    },
-
-    events: function(lo, hi, ctx){
-      // optional: emit one log-like event when focus changes (used if a log element is elsewhere)
-      return [];
     },
 
     check: function(ctx){

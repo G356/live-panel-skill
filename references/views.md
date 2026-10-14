@@ -22,10 +22,9 @@ Six kinds: `nebula` (force-directed relation graph), `timeline` (swimlanes), `fu
 - `examples/<kind>/config.json` — an AI-agent themed example using this view (written for
   `canvas.preset:"4:5"`, `theme.preset:"light-pastel"` by default; it must ALSO pass when the
   preset/theme are swapped).
-- `docs/views/<kind>.md` — short doc: when to choose this view, all config keys with defaults,
-  one minimal JSON snippet. (English, with a 2-line 中文 summary at top.)
+- Config keys: list every kind-specific key with its default in section 6 below (the per-view brief).
 - Do NOT edit `assets/template.html`, `scripts/*`, `SKILL.md`, `README.md` or other views. If you
-  believe the core needs a change, write it in `docs/views/<kind>.md` under "Core requests" instead.
+  believe the core needs a change, describe it in your PR under "Core requests" instead.
 
 `scripts/livepanel.py build_page` inlines every `assets/views/*.js` (sorted by name) into the page
 at `<!--LIVE_VIEWS-->`, so the page stays self-contained.
@@ -93,7 +92,7 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
    overlap other text. Use `ctx.fit` so long CJK or English labels shrink/ellipsize instead of
    overflowing. Minimum font size 11 px. Text nodes: `white-space:pre`, explicit `line-height`.
 4. **Contrast**: text colour vs its background ≥ 4.5:1 for body, ≥ 3:1 for ≥ 20px titles. Use
-   `fg`/`dim` on `bg`/`panel`; for text on a coloured fill use `fg` (light) or `wh` (dark accent).
+   `fg`/`muted` on `bg`/`panel` (not `dim`, see R17); for text on a coloured fill use `fg` (light) or `wh` (dark accent).
 5. **Edges never cross through a node/card**: route lines around cards or end them at card borders.
 6. **Rhythm**: no element may flash (toggle visibility or colour) faster than every 0.4 s; any
    single highlight lasts ≥ 0.8 s. Three tempos: fast (packets/particles), medium (1–3 s state
@@ -132,9 +131,15 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
   are done, the one under it is active (progress fill), later ones pending; lane labels left;
   axis ticks; dependency arrows optional `deps:[[from,to]]` routed between bars without crossing
   bars. Counters "done n/N" must match bars.
-- **funnel**: `stages:[{label,value}]` values non-increasing (check() must report a violation),
-  bar/trapezoid widths proportional to value, conversion % between stages = round(next/prev*100),
-  particles flowing down whose density matches values, highlight sweeping stage by stage.
+- **funnel**: `stages:[{label,value,sub?}]` values non-increasing (check() must report a violation),
+  bar/trapezoid widths proportional to value, conversion % between stages = round(next/prev*100)
+  from 1 % up and two significant digits below 1 % (0.025 %, never 0 %), particles flowing down
+  whose density matches values, highlight sweeping stage by stage. Values ≥ 1 M print as `20M` /
+  `1.5B`. Optional keys (as implemented): `period` (18), `scale` (`"linear"` default, `"log"` for
+  data spanning orders of magnitude, say so in `credit`), `palette` (one accent per stage by
+  default; `"mono"` = one quiet accent plus a hot accent on stage `focus`, default the last stage),
+  `labelScale` / `valueScale` (1; multiply the label / value font size). Real-data example with
+  `scale:"log"` + `palette:"mono"`: `examples/funnel-karpathy/`.
 - **tree**: `root:{label,kind?,children:[...]}` (kind: agent|subagent|tool). Tidy tree layout
   (top-down, or left-right when the tree is deep and the rect is tall). Orthogonal rounded
   connectors. Animated expand/collapse **without layout jumps**: reserve space for all nodes; a
@@ -143,7 +148,9 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
 - **ring**: `steps:[{label,desc?}]` (3–8) evenly on a circle, curved arrows between consecutive
   steps, a comet travelling the ring, current step highlighted (slow), centre shows the loop name
   and an iteration counter that increments exactly once per full lap; optional `spokes` / inner
-  sub-loop.
+  sub-loop. As implemented: `period` (28) = one lap, `name` (centre text, defaults to `title`),
+  `innerLoop:["think","tool",...]` (inner sub-loop items, lit one per 1.2 s while step
+  `innerLoopStep` (default 1) is current).
 - **kpi**: `cards:[{label,value,unit?,delta?,series:[numbers],status?}]`, grid auto-chosen by count
   and rect aspect; each card: label, big number (title font), delta coloured ok/bad, sparkline of
   series with a moving cursor whose y equals the shown value at that time (one truth), status dot.
@@ -151,7 +158,7 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
 ## 7. How to verify (must pass before you finish)
 
 ```
-CHROME=$(find /workspace/tools/chrome -name chrome-headless-shell -type f | head -1)
+CHROME=$(command -v chromium || command -v google-chrome || find / -name chrome-headless-shell -type f 2>/dev/null | head -1)
 python3 scripts/verify_view.py --config examples/<kind>/config.json --chrome "$CHROME" --out /tmp/vv-<kind>
 ```
 verify_view.py renders the config in all 6 combos (3 canvases x 2 themes), runs check_frames
