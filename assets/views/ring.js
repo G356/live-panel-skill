@@ -5,7 +5,6 @@
       var e = ctx.e, root = ctx.root, rect = ctx.rect;
       var w = rect.w, h = rect.h;
       var dark = ctx.dark;
-      var TH = ctx.TH;
       var period = e.period || 28;
       var steps = e.steps || [];
       var n = steps.length;
@@ -15,7 +14,6 @@
 
       // ---- title area ----
       var titleH = 0, subH = 0;
-      var titleY = 0;
       if(e.title){
         var titleSize = Math.round(u * 3.2);
         titleSize = Math.min(titleSize, 42);
@@ -27,7 +25,6 @@
         ctx.mark(titleEl, 'text');
         root.appendChild(titleEl);
         titleH = Math.round(tf.size * 1.3) + u*2;
-        titleY = Math.round(u*2) + Math.round(tf.size*1.3)/2;
       }
       if(e.subtitle){
         var subSize = Math.round(u * 1.8);
@@ -59,7 +56,6 @@
       cy = topPad + availH/2;
 
       // SVG
-      var NS = 'http://www.w3.org/2000/svg';
       var svg = ctx.svg('svg', {width: w, height: h});
       svg.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;pointer-events:none';
       root.appendChild(svg);
@@ -134,9 +130,9 @@
         // node circle
         var nd = ctx.svg('circle', {
           cx: p[0], cy: p[1], r: nodeR,
-          fill: dark ? ctx.cc('panel') : ctx.cc('panel'),
+          fill: ctx.cc('panel'),
           stroke: ctx.cc('line'),
-          'stroke-width': dark ? 1.5 : 1.5
+          'stroke-width': 1.5
         });
         svg.appendChild(nd);
         // step number inside node
@@ -211,9 +207,6 @@
         fill: ctx.cc('acc1'),
         stroke: 'none'
       });
-      if(dark){
-        comet.setAttribute('filter', '');
-      }
       svg.appendChild(comet);
 
       // comet glow
@@ -335,9 +328,7 @@
       var curStep = Math.floor(phase * n);
       if(curStep >= n) curStep = n-1;
 
-      // highlight current step (slow tempo: step changes every period/n seconds = 28/4=7s)
-      var highlightDur = 0.8; // R6: min 0.8s
-      var stepDur = period / n;
+      // highlight current step (slow tempo: the step changes every period/n seconds)
       var stepPhase = (phase * n) - curStep; // 0..1 within current step
 
       for(var i=0;i<n;i++){
@@ -348,9 +339,7 @@
         var isNext = (i === (curStep+1)%n);
         // arc leading to curStep: accented
         if(isCur){
-          // incoming arc (i-1 -> i) has accent? actually arc i goes from step i to i+1
-          // The arc that's currently being traversed is arc[(curStep-1+n)%n]? No: comet is at step i heading to i+1
-          // Let's accent arc[curStep] which the comet is currently traveling along
+          // arc i runs from step i to step i+1: the one the comet is travelling along
           ap.setAttribute('stroke', ctx.cc(ctx.acc(s.accentIdx)));
           ap.setAttribute('stroke-width', s.dark ? 2.5 : 3);
           ap.setAttribute('opacity', '1');
@@ -373,12 +362,12 @@
         if(isCur){
           node.circle.setAttribute('fill', ctx.cc(ctx.accf(s.accentIdx)));
           node.circle.setAttribute('stroke', ctx.cc(ctx.acc(s.accentIdx)));
-          node.circle.setAttribute('stroke-width', String(s.dark ? 2.5 : 2.5));
+          node.circle.setAttribute('stroke-width', '2.5');
           node.circle.setAttribute('r', String(s.nodeR * 1.25));
           node.num.setAttribute('fill', ctx.cc(ctx.acc(s.accentIdx)));
           node.num.setAttribute('font-weight', '700');
         } else {
-          node.circle.setAttribute('fill', s.dark ? ctx.cc('panel') : ctx.cc('panel'));
+          node.circle.setAttribute('fill', ctx.cc('panel'));
           node.circle.setAttribute('stroke', ctx.cc('line'));
           node.circle.setAttribute('stroke-width', '1.5');
           node.circle.setAttribute('r', String(s.nodeR));
