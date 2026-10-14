@@ -12,8 +12,9 @@ Because views compute their own layout from the rect, **the same config must ren
 canvas presets 4:5 (1200x1500), 3:4 (1080x1440) and 1:1 (1080x1080) and in both themes
 (terminal-dark, light-pastel)** with nothing but `canvas.preset` / `theme.preset` changed.
 
-Six kinds: `nebula` (force-directed relation graph), `timeline` (swimlanes), `funnel`
-(pipeline/conversion), `tree` (hierarchy / org chart), `ring` (loop/cycle), `kpi` (dashboard matrix).
+Seven kinds: `nebula` (force-directed relation graph), `timeline` (swimlanes), `funnel`
+(pipeline/conversion), `tree` (hierarchy / org chart), `ring` (loop/cycle), `loop` (grouped workflow
+with decisions and loop-backs), `kpi` (dashboard matrix).
 
 ## 1. Files (one view = one file, so parallel work never conflicts)
 
@@ -151,6 +152,93 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
   sub-loop. As implemented: `period` (28) = one lap, `name` (centre text, defaults to `title`),
   `innerLoop:["think","tool",...]` (inner sub-loop items, lit one per 1.2 s while step
   `innerLoopStep` (default 1) is current).
+- **loop**: a grid of icon cards and decision diamonds inside coloured group frames, solid
+  forward edges, dashed loop-backs, and a token that walks a script. Keys (all as implemented):
+  `title`, `subtitle`, `period` (26; seconds for **all** rounds of `walks` together, so one hop
+  lasts `period / total hops`; keep a hop ≥ 1.25 s), `cols` (default `max(col+span)`),
+  `font` (`"sans"` default: the light-pastel font stack for cards, diamonds, labels and group
+  titles; `"theme"` keeps the theme font; title and titlebar are never touched),
+  `groups:[{id,label,sub?,hue}]`,
+  `nodes:[{id,group?,row,col,span?,type,icon?,label,en?,desc?:[line,...],hue?}]`,
+  `edges:[{from,to,kind?,label?,dashed?,fromSide?,toSide?,lane?}]`,
+  `walks:[[nodeId,...],...]` (one array per round; `walk:[...]` is the same as `walks:[walk]`),
+  `entry:nodeId`, `status:{node,round,step}`, `log:{who,c}` (hop events). `seed` and the old
+  `rounds` key are ignored: the layout is deterministic and the round count is `walks.length`.
+  - `hue` is `green|blue|purple|amber|cyan|pink`; the view maps it to the right accent per theme,
+    so configs never name `acc1..6`. Group colour is used for strokes, icons and glow only; all
+    text is `fg` / `muted`.
+  - node `type`: `card` (default), `trigger` and `output` (cards; `output` has a solid icon tile),
+    `diamond` (text `label` + `en`, fitted into the inscribed rectangle, no icon; about 0.75 of a
+    cell wide and 1.15x the typical card high), `note` (borderless annotation in muted text, with
+    an optional bare `icon`), `legend` (`items:[{style:"solid|dashed|dot",text}]` spread over the
+    node's cells, no frame). `icon` is a Lucide name from the table embedded in `loop.js`
+    (`message-square eye ticket bug git-pull-request shield-check bot git-merge timer bell
+    refresh-cw info hand circle`); an unknown name draws `circle` and `check()` reports it. To add
+    an icon copy its SVG children from `lucide-static` into the `ICONS` object.
+  - card height follows the content (icon tile or text, whichever is taller, plus padding); the
+    vertical space left over goes to group padding, block gaps and the loop-back corridors.
+    Density steps down (smaller icon tile, tighter padding, at most 2 description lines) until
+    the grid fits the rect, so 1:1 stays readable. Rows are grouped by the group of the first node
+    in the row; a row without a group (the trigger row) is drawn without a frame. Description
+    lines wrap while the card has room; the `en` gloss goes inline, then shrinks, then moves to
+    its own line under the title, and is hidden only as a last resort. Hidden lines and glosses
+    both count towards R14 (> 20 % is reported by `check()`, a hidden gloss is reported on its own).
+  - edges are orthogonal with rounded corners and an arrowhead on the target border. Sides are
+    chosen from the geometry unless `fromSide` / `toSide` are given; several edges on one side get
+    separate ports (30 % / 70 % for two; a diamond has one vertex per side, a card edge facing a
+    diamond stays on the centre line). `kind` (`next` · `yes` · `no` · `back`) only supplies the
+    default of `dashed` (`no` / `back` dashed, the rest solid) and the label wording; **the final
+    `dashed` flag alone decides what a loop-back is**: dim colour, `warn` lit colour with flowing
+    dashes, and no ambient flow. `lane:"left"|"right"` sends the edge through a gutter reserved
+    at that side (long loop-backs). With `motion:"walk"` every edge has one resident green dot (radius ~0.55u) in the
+    middle of its longest straight stretch, kept >= 1.5u from the arrowhead and from labels;
+    solid edges long enough carry smaller, fainter dots (~1.15 s, divides `period`); in ambient
+    mode packets replace both.
+    Labels of decision edges sit beside the source diamond's vertex; others take the first free
+    spot (clear of nodes, other edges, frame borders, titles, dots). Group titles sit in the
+    stretch of their strip that no vertical edge crosses.
+  - walks: each round starts and ends on the same node (e.g. `watch … output watch`) and every
+    consecutive pair needs an edge; `check()` reports a missing edge and a round that does not close;
+    `verify_view.py` rejects a `canvas.duration` that is not a whole multiple of `period`. Per hop the token dwells
+    inside the node for 40 %, then travels 60 % along the edge, which lights in `ok` (forward) or
+    `warn` (dashed) with flowing dashes. There is always exactly one focus: the source node until
+    the token is past the middle of the edge, then the target, crossfaded over >= 0.3 s; the
+    status card's step name flips with it and its round counter is the index of the current round.
+    `entry:"trigger"`: during the closing hop of each round (back to the first node) a second,
+    smaller token rides `entry → first node` and the entry card glows weakly. Loop-backs that no
+    round walks simply stay dim, so give each decision loop a round of its own.
+  - motion: `motion` is `"ambient"` (default) | `"walk"` | `"ambient+walk"`; `ambientPeriod`
+    (default 3.0 s) is the ambient lap. Ambient makes the whole graph move at once: every forward edge
+    carries one or two big green packets (5-step path tail, SVG glow on dark) at one px/s speed,
+    spaced so the lap closes within `ambientPeriod`; every dashed loop-back marches its dashes
+    forward (3 dash cycles per lap, dim colour, no flicker) with one translucent warn dot riding it
+    once per lap; when a packet lands, the target node ripples (outline 0 -> 0.9 -> 0 while growing
+    6 px, card lifts 2 px, shadow deepens; >= 0.9 s bump, once per lap); each icon has its own
+    action window (below); card positions and group frames stay still. The resident middle dot is dropped (the packets replace it). With a walk,
+    `period` must be a whole multiple of `ambientPeriod` (`check()` reports it) and the focus is
+    quieter: outline 1.5x (no glow), token 0.8x. `verify_view.py` demands `canvas.duration` to be a
+    whole multiple of `ambientPeriod` (pure ambient) or `period` (walk on).
+    Status card (`status`): in pure ambient the big line is `status.ambientTitle`, the small line
+    `status.ambientSub`, and the dot row is a chase (one dot every `ambientPeriod / dots`); with a
+    walk it shows round / step as before.
+  - icon motion (ambient only, phase staggered by node order `i*0.37`, one action window per
+    `ambientPeriod`, eased, still outside the window; every icon also breathes 1 -> 1.08 in step
+    with its window):
+
+    | icon | motion (window) |
+    |---|---|
+    | message-square (drawn as Lucide `message-square-more`) | three dots bounce 5 px in turn, easeOutBack, 0.12 lap apart (40%) |
+    | eye | full blink (scaleY 1 -> 0.1 -> 1, 0.25 s), then the pupil looks left/right +-2.5 px and recentres (40%) |
+    | ticket | wiggle +-12 deg, elastic settle (35%) |
+    | bug | crawl +-3 px with an +-8 deg head sway (40%) |
+    | git-pull-request, git-merge | float 7 px up with overshoot, ease back (default 35%) |
+    | shield-check | scale 1 -> 1.18 (easeOutBack), check re-drawn by stroke-dashoffset (45%) |
+    | timer | hand turns one full circle easeInOut, button presses 1.5 px (50%) |
+    | refresh-cw (status card) | one full easeInOut rotation (70%) |
+    | info and the rest | breathing only |
+
+  - every marked node (text, edges, boxes) has a static style; focus, lit edges, tokens, dots and
+    glow are separate unmarked elements whose opacity is the only thing `seek` changes.
 - **kpi**: `cards:[{label,value,unit?,delta?,series:[numbers],status?}]`, grid auto-chosen by count
   and rect aspect; each card: label, big number (title font), delta coloured ok/bad, sparkline of
   series with a moving cursor whose y equals the shown value at that time (one truth), status dot.
