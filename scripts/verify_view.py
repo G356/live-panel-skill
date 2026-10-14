@@ -7,7 +7,7 @@ rules from references/views.md section 4 inside the page (contrast, fill,
 edges through boxes, flicker, views present, page error) and writes 3
 screenshots per combo plus out/report.json.
 
-  CHROME=$(find /workspace/tools/chrome -name chrome-headless-shell -type f | head -1)
+  CHROME=$(command -v chromium || command -v google-chrome || find / -name chrome-headless-shell -type f 2>/dev/null | head -1)
   python3 scripts/verify_view.py --config examples/<kind>/config.json --chrome "$CHROME" --out /tmp/vv-<kind>
 
 Exit 0 = every combo passed. stdout carries the JSON report only with --json;
