@@ -19,6 +19,10 @@
   }
 
   function fmtNum(v){
+    // compact for population-scale numbers: 8B, 1.5B, 20M; commas below a million
+    var a = Math.abs(v);
+    if(a >= 1e9) return String(Math.round(v/1e8)/10) + 'B';
+    if(a >= 1e6) return String(Math.round(v/1e5)/10) + 'M';
     var s = String(Math.round(v));
     return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
@@ -210,7 +214,9 @@
       var convs = [];
       for(var i=0;i<n-1;i++){
         var prevV = stages[i].value;
-        var pct = prevV>0 ? Math.round(stages[i+1].value/prevV*100) : null;   // 0 -> 0 has no rate
+        var r = prevV>0 ? stages[i+1].value/prevV*100 : null;   // 0 -> 0 has no rate
+        // whole percent from 1% up; below that keep two significant digits so a tiny rate never prints as 0%
+        var pct = r==null ? null : (r >= 1 || r === 0 ? Math.round(r) : Number(r.toPrecision(2)));
         var y = stageCy[i] + (stageH+stageGap)/2;
         // pill
         var pillX = cx - convPillW/2;
