@@ -1,8 +1,61 @@
-# live-panel
+# live-panel: animated architecture diagrams from one JSON file
 
 **English** | [中文说明](#中文说明)
 
-Turn a system description (one JSON file) into a **terminal-style, always-running architecture diagram**, or a soft light-theme infographic that moves: fixed layout, packets flowing along the wires, a scrolling log, counters, bars that flip state, side triggers that light up in turn. Output is an H.264 mp4 (X / Xiaohongshu ready) or a live web page. It is also a Claude Code style *skill* (`SKILL.md`).
+**live-panel is an open-source agent skill and renderer that turns one JSON config into an animated architecture diagram: a terminal-style "live panel" (or a light pastel infographic) rendered to an H.264 mp4 or a self-contained web page.** The layout stays fixed while the system looks like it is running: packets flow along the wires, a log scrolls, counters tick, bars flip state and side triggers light up in turn.
+
+> 中文一句话：**live-panel 把一个 JSON 配置渲染成会动的架构图**——终端监控面板风格的动态架构图 / agent 架构动图，或会动的浅色信息图，输出 mp4 视频或可循环的网页，画幅预设适配 X（4:5）和小红书（3:4）。
+
+- **Input:** one JSON file (boxes, wires, packet paths, log wording, counters). Start from an example; the HTML template never needs editing.
+- **Output:** H.264 mp4 (30 fps, silent AAC track) and/or a self-contained HTML page that loops live in any browser.
+- **Looks:** `terminal-dark` (monitoring panel in a terminal window) and `light-pastel` (Xiaohongshu-style infographic). Canvas presets `4:5` 1200x1500 (X), `3:4` 1080x1440 (Xiaohongshu), `1:1` 1080x1080.
+- **Use it for:** agent architecture diagrams, multi-agent / agent-tree panels, system and data-flow diagrams, "monitoring dashboard" style posts.
+- **For AI agents:** `SKILL.md` makes it a skill for Claude Code, Codex and other agents that read SKILL.md; the agent writes the JSON, renders and checks frames itself.
+- **Credit:** the look and motion idea come from a clip by [@thedelost](https://x.com/thedelost); see *Credits* below.
+- **Requirements:** Python 3.8+ (standard library only), Chrome or Chromium, ffmpeg. No API key, no network, no pip packages. MIT licensed code.
+
+## Quick start: a minimal JSON config
+
+Save this as `minimal.json` (it is also `examples/minimal/config.json`):
+
+```json
+{
+  "canvas": {"preset": "1:1", "duration": 12, "fps": 30, "preroll": 4},
+  "theme": {"preset": "terminal-dark"},
+  "clock": {"start": "09:00:00", "rate": 1},
+  "titlebar": {"text": "~/minimal - live-panel"},
+  "credit": {"text": "minimal example - all numbers are illustrative", "y": 1060},
+  "machines": {
+    "reqs": {"type": "counter", "start": 1200, "rate": 7, "format": "comma"},
+    "agent": {"type": "lane", "period": 6, "run": 4, "off": 0.5, "busy": "working", "done": ["done"],
+              "log": {"who": "agent", "c": "gr", "msgs": [["task finished, result sent back", "ok"]]}}
+  },
+  "elements": [
+    {"type": "text", "x": 0, "w": 1080, "y": 90, "align": "center", "runs": [{"t": "USER -> AGENT -> TOOLS", "c": "fg", "b": 1}]},
+    {"type": "box", "x": 390, "y": 140, "w": 300, "h": 110, "color": "cy", "pad": [12, 14],
+     "lines": [{"t": "user", "c": "cy", "b": 1}, {"runs": ["requests ", {"v": "reqs"}]}, {"t": "(illustrative)", "c": "dim"}]},
+    {"type": "line", "from": [540, 250], "to": [540, 330]},
+    {"type": "box", "x": 390, "y": 330, "w": 300, "h": 110, "color": "gr", "pad": [12, 14],
+     "lines": [{"t": "agent", "c": "gr", "b": 1}, {"runs": [{"v": "agent"}]}]},
+    {"type": "line", "from": [540, 440], "to": [540, 520]},
+    {"type": "box", "x": 390, "y": 520, "w": 300, "h": 110, "color": "ye", "pad": [12, 14],
+     "lines": [{"t": "tools", "c": "ye", "b": 1}, "search / code / files"]},
+    {"type": "flow", "path": [[540, 250], [540, 330]], "period": 1.5, "offsets": [0, 0.7], "color": "cy"},
+    {"type": "flow", "path": [[540, 440], [540, 520]], "period": 2, "offsets": [0.3], "color": "gr"},
+    {"type": "log", "x": 40, "y": 700, "w": 1000, "rows": 4, "padTop": 16, "padBottom": 30, "padLeft": 20,
+     "title": "log", "titleX": 36, "titleW": 80,
+     "cols": [{"key": "time", "x": 0}, {"key": "who", "x": 130}, {"key": "m", "x": 260}, {"key": "g", "x": 860}]}
+  ]
+}
+```
+
+```bash
+git clone https://github.com/ythx-101/live-panel-skill && cd live-panel-skill
+python3 scripts/render.py --config examples/minimal/config.json --out minimal.mp4 --html-out minimal.html
+python3 scripts/check_frames.py --config examples/minimal/config.json --out-dir frames --repeat   # exit 0 = no overflow/overlap, replay identical
+```
+
+![minimal example frame](examples/minimal/screenshots/frame_1.png)
 
 > ## Credits - please read
 > - **The idea, the look and the motion grammar come from an architecture-diagram clip by [@thedelost](https://x.com/thedelost)** (a Codex agent-tree panel, generated with GPT, screen-recorded as a web page): <https://x.com/thedelost/status/2105398038026195279>. It spread via a quote-post by **[@slashui](https://x.com/slashui)**: <https://x.com/slashui/status/2105850132365443528>.
@@ -108,9 +161,61 @@ No font files are bundled. The stacks fall back through installed fonts: termina
 - Determinism: the Codex example rendered twice gives byte-identical decoded frames for all 900 frames (`ffmpeg -f framemd5` hashes equal); same for the agent-architecture example; `check_frames.py --repeat` re-screenshots after seeking away and compares bytes.
 - Fidelity of the Codex recreation against frame captures of the original (side by side at the same moment): box positions and sizes within a few pixels; same four-colour code, same three-tempo behaviour (packets on every wire, trigger rotation with typed advice and `calls`/`tokens` accumulation, gauges flipping `sharp`/`split` with the legend swapping, spinners and done states, 4-row log with newest row bright, forks counter ~16/s, prompt cursor). Differences: the original's font is a slab-like monospace and ours is JetBrains Mono; the original's trigger arrows are thin solid, ours dashed; bar texture, packet glow and trails are close but not identical; the original's gauge values, log wording and timing were read by eye from 2 fps frames, so the sequences differ; the third advice text (`before done`) was not legible in the frames and is a placeholder written for this repo; log time runs at an assumed 3x.
 
+## FAQ
+
+**What is live-panel?**
+An open-source renderer plus agent skill that turns a JSON description of a system into an animated architecture diagram, as an mp4 video or a live web page. The look is a terminal "monitoring panel" (or a light pastel infographic) whose layout never moves while packets, logs, counters and status bars show the system running.
+
+**How do I turn a JSON file into an animated diagram video?**
+Copy an example config (`examples/minimal`, `examples/codex-agents`, `examples/airbnb`, `examples/agent-architecture`), edit boxes, wires and text, then run `python3 scripts/render.py --config my.json --out my.mp4`. Run `python3 scripts/check_frames.py --config my.json --out-dir frames --repeat` to catch text overflow and overlaps before you post.
+
+**Can it make an animated agent architecture diagram or agent tree for X / Twitter?**
+Yes. That is the original use case: `examples/codex-agents/` is a 4:5 agent-tree panel (a credited recreation of @thedelost's clip) with sub-agents, side-rail triggers, a session log and token/call counters.
+
+**Can I use it for Xiaohongshu (小红书) infographics?**
+Yes. Use `"theme": {"preset": "light-pastel"}` and `"canvas": {"preset": "3:4"}` (1080x1440). `examples/agent-architecture/` re-animates a static Xiaohongshu infographic (credited to its author).
+
+**Can Claude Code, Codex or Cursor drive it?**
+Yes. Put the folder where your agent loads skills (Claude Code: `~/.claude/skills/live-panel/`). `SKILL.md` tells the agent how to collect content, write the config, render and check frames.
+
+**Does it need an API key, a GPU or an internet connection?**
+No. It runs locally with Python's standard library, a local Chrome/Chromium (headless, driven over the DevTools pipe) and ffmpeg.
+
+**Is the output deterministic? Does it loop?**
+Every frame is a pure function of time (`window.seek(t)`, fixed-seed picks, no wall clock, no `Math.random`, no CSS animation), so the same config renders the same frames; `check_frames.py --repeat` verifies it. The HTML page loops live in a browser.
+
+**Can I get a GIF?**
+The renderer writes mp4 (chat apps and X handle it better). Convert with ffmpeg if you need a GIF, e.g. `ffmpeg -i my.mp4 -vf "fps=15,scale=600:-1:flags=lanczos" my.gif`.
+
+**Does it work on Windows?**
+Linux and macOS natively; on Windows run the same scripts inside WSL.
+
+**Are the numbers on screen real?**
+Only if you give them a source. The skill's rule: fixed facts carry their source in the `credit` line; anything that moves only because the animation moves is labelled "illustrative".
+
+**Can I recreate someone else's diagram?**
+Yes, with credit: put the original author and link in the `credit` footer and in your post, and say it is a recreation.
+
+## How it compares
+
+| | live-panel | Mermaid | Excalidraw | Remotion | Manim |
+| --- | --- | --- | --- | --- | --- |
+| Input | one JSON config (absolute pixel layout) | text DSL | drawing in a whiteboard editor | React / TypeScript code | Python code |
+| Output | H.264 mp4 + self-contained live HTML page | SVG / PNG | PNG / SVG / `.excalidraw` | video | video |
+| Motion | built-in "always running" grammar: packets, scrolling log, counters, gauges, triggers | essentially static | static | anything you code | anything you code |
+| Layout | you place boxes (pixel grid) | automatic | manual | you code it | you code it |
+| Built-in checks | text overflow / overlap from the DOM, replay determinism | - | - | - | - |
+| Best for | social posts that show a system or agent tree "running" (X 4:5, Xiaohongshu 3:4) | docs and READMEs | sketches, whiteboarding | general programmatic video | math and explainer animation |
+
+Use Mermaid or Excalidraw when a static diagram is enough, Remotion or Manim when you want full control over arbitrary motion, and live-panel when you want a fixed-layout architecture diagram that looks like a live monitoring panel without writing animation code.
+
+## Cite
+
+If you reference this project, see [`CITATION.cff`](CITATION.cff) (GitHub shows a "Cite this repository" button). Machine-readable project summary for LLMs: [`llms.txt`](llms.txt).
+
 ## License
 
-MIT for the code (see `LICENSE`). The visual design that `examples/codex-agents/` recreates belongs to @thedelost, and the infographic re-animated in `examples/agent-architecture/` belongs to 小红书 @林纾; those examples are credit-bearing recreations and are not covered by the MIT grant. Airbnb figures are Airbnb's own statements from a public interview.
+MIT for the code (see `LICENSE`; carve-outs for the recreated example designs are in `NOTICE`). The visual design that `examples/codex-agents/` recreates belongs to @thedelost, and the infographic re-animated in `examples/agent-architecture/` belongs to 小红书 @林纾; those examples are credit-bearing recreations and are not covered by the MIT grant. Airbnb figures are Airbnb's own statements from a public interview.
 
 ---
 
@@ -135,3 +240,21 @@ MIT for the code (see `LICENSE`). The visual design that `examples/codex-agents/
 | 任意方框和连线的架构图 | 不用视图，自由摆放（三个原有例子） | 已有 |
 
 一张图一个视图；要讲两件事就出两段视频。没有真实来源的数字画面上要标“示意”。验收：`python3 scripts/verify_view.py --config <配置> --chrome "$CHROME"`，7 组组合全 PASS 才算完成。
+
+### 常见问题（中文）
+
+**live-panel 是什么？** 一个开源的动态架构图渲染器 + agent skill：把一个 JSON 配置变成会动的架构图（mp4 视频或可循环网页）。版面固定不动，连线上的数据包、滚动日志、计数器和状态条让系统看起来“一直在跑”。
+
+**怎么做 agent 架构动图发 X？** 复制 `examples/codex-agents/config.json`（暗色 4:5，复刻自 @thedelost，需保留署名），改方框、连线和文字，`render.py` 出 mp4，`check_frames.py --repeat` 自查到退出码 0。
+
+**小红书 3:4 浅色信息图怎么做？** `theme.preset` 用 `light-pastel`，`canvas.preset` 用 `3:4`（1080x1440），参考 `examples/agent-architecture/`。
+
+**需要 API key 或联网吗？** 不需要。Python 标准库 + 本机 Chrome/Chromium + ffmpeg，全部本地运行。
+
+**能让 Claude Code / Codex 直接用吗？** 能。把整个文件夹放进 agent 的 skills 目录（Claude Code：`~/.claude/skills/live-panel/`），agent 按 `SKILL.md` 写配置、渲染、逐帧检查。
+
+**能出 GIF 吗？** 默认出 mp4；需要 GIF 可用 ffmpeg 转：`ffmpeg -i my.mp4 -vf "fps=15,scale=600:-1:flags=lanczos" my.gif`。
+
+**和 Mermaid / Excalidraw / Remotion 有什么不同？** Mermaid、Excalidraw 出静态图；Remotion、Manim 什么都能动但要写代码；live-panel 专做“固定版面、像实时监控面板一样运行”的架构图，只写 JSON，不写动画代码。对比表见上文 *How it compares*。
+
+**画面上的数字是真的吗？** 只有给了来源的才算真实数字，来源写在 `credit` 行；只因动画而跳动的计数一律标“示意 / illustrative”。复刻别人的图，`credit` 和帖子里都要写原作者与链接。
