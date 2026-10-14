@@ -294,17 +294,18 @@
       ctx.mark(iterSub, 'text');
 
       // ---- state for seek ----
-      this._s = {
+      var _st = {
         cx:cx, cy:cy, ringR:ringR, n:n, stepAngle:stepAngle, period:period,
         comet:comet, glow:glow, iterLabel:iterLabel,
         stepNodes:stepNodes, arcPaths:arcPaths, arrowHeads:arrowHeads,
         innerCircle:innerCircle, nodeR:nodeR, u:u, dark:dark, innerItems:innerItems, innerStep:(e.innerLoopStep==null?1:e.innerLoopStep),
         accentIdx: 0
       };
+      return _st;
     },
 
-    seek: function(t, ctx){
-      var s = this._s;
+    seek: function(t, ctx, st){
+      var s = st || (ctx && ctx.state);
       if(!s) return;
       var cx = s.cx, cy = s.cy, ringR = s.ringR, n = s.n;
       var stepAngle = s.stepAngle, period = s.period;
@@ -397,7 +398,9 @@
         }
       }
       // comet pulsing (fast tempo)
-      var pulse = 1 + 0.15 * Math.sin(t * 6);
+      // pulse frequency is a whole number of cycles per lap, so the loop has no jump
+      var pulseK = Math.max(1, Math.round(6*period/(2*Math.PI)));
+      var pulse = 1 + 0.15 * Math.sin(2*Math.PI*pulseK*t/period);
       s.comet.setAttribute('r', String(s.u*1.9 * pulse));
     },
 

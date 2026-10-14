@@ -5,7 +5,7 @@
  },
  "canvas": {
   "preset": "4:5",
-  "duration": 28,
+  "duration": 36,
   "fps": 30,
   "preroll": 8
  },

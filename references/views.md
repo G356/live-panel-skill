@@ -162,8 +162,11 @@ the machine has 2 CPUs shared with others.
 ## 8. Core notes (as implemented in assets/template.html)
 
 - `impl.build(ctx)`, `impl.seek(t, ctx)`, `impl.events(lo, hi, ctx)`, `impl.check(ctx)` are all called with
-  `this === impl`. A config may contain several views of different kinds; assume at most one view of
-  the same kind per config, and keep state in closure variables or on `this`.
+  `this === impl`, which is shared by every view of that kind. Return the view's state from `build`;
+  the core keeps it per view and passes it back as `seek(t, ctx, state)` (also `ctx.state`). Never keep
+  per-view state on `this` or in module variables, or two views of one kind overwrite each other.
+- Loops: every periodic motion must complete a whole number of cycles in the view's `period`, and
+  `canvas.duration` should be a multiple of it, so the mp4 repeats without a jump.
 - `ctx.measure(text, px, font?, bold?)`, `ctx.fit(text, px, maxW, font?, minPx=11, bold?)` -> `{text, size}`.
 - `ctx.dark` is true unless `theme.preset == "light-pastel"`. `ctx.TH.titleFont` is a full CSS font stack
   (Smiley Sans first when `theme.titleFont:"smiley"`); in CSS use `var(--font-title)` / `var(--font)`.

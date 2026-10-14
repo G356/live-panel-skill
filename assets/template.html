@@ -319,7 +319,7 @@ function viewCtx(v){
 }
 function buildViews(){
   VIEWS.forEach(function(v){ var impl=VIEW_IMPL[v.kind]; if(!impl) throw new Error('unknown view kind "'+v.kind+'" (is assets/views/'+v.kind+'.js inlined?)');
-    v.impl=impl; v.ctx=viewCtx(v); v.state=impl.build(v.ctx); });
+    v.impl=impl; v.ctx=viewCtx(v); v.state=impl.build(v.ctx); v.ctx.state=v.state; });
   if(VIEWS.length){ var D=(cfg.canvas&&cfg.canvas.duration)||30, lo=-120, hi=D+120, add=[];
     VIEWS.forEach(function(v){ if(v.impl.events) add=add.concat(v.impl.events.call(v.impl,lo,hi,v.ctx)||[]) });
     if(add.length){ EVT=EVT.concat(add); EVT=EVT.map(function(e,i){e.__i=i;return e}).sort(function(a,b){return a.t-b.t||a.__i-b.__i}); } }
@@ -365,7 +365,7 @@ window.seek=function(t){
       A.ln.style.borderColor=on?A.col:''; A.hd.style.color=on?A.col:'var(--c-dim)';
       if(on){ var ph=Number(V[A.m+'.phase']), u=ph/0.9, d=(u-Math.floor(u))*(A.P.len+10); putPk(A.P.el[0],A.P,d); putPk(A.P.el[1],A.P,d-12); }
       else { A.P.el[0].style.display='none'; A.P.el[1].style.display='none'; } });
-    VIEWS.forEach(function(v){ if(v.impl&&v.impl.seek) v.impl.seek.call(v.impl,t,v.ctx); });
+    VIEWS.forEach(function(v){ if(v.impl&&v.impl.seek) v.impl.seek.call(v.impl,t,v.ctx,v.state); });
     styleBoxes(); stylePaths(); applyDyn(); renderLog(t);
     window.__t=t;
   }catch(e){fail(e)}

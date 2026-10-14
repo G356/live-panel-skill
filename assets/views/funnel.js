@@ -72,7 +72,7 @@
       var stageCy = stages.map(function(_,i){ return bodyTop + stageH/2 + i*(stageH+stageGap); });
 
       // widths proportional to max value
-      var vmax = stages[0]?stages[0].value:1;
+      var vmax = (stages[0]&&stages[0].value>0)?stages[0].value:1;   // all-zero funnel: no NaN geometry
       var minFrac = 0.28; // minimum readable width (relative to bodyW)
       var maxBarW = bodyW*0.68;
       var labelW = Math.round(bodyW*0.18);
@@ -209,8 +209,8 @@
       var convLh = convPillH;
       var convs = [];
       for(var i=0;i<n-1;i++){
-        var ratio = stages[i+1].value/stages[i].value;
-        var pct = Math.round(ratio*100);
+        var prevV = stages[i].value;
+        var pct = prevV>0 ? Math.round(stages[i+1].value/prevV*100) : null;   // 0 -> 0 has no rate
         var y = stageCy[i] + (stageH+stageGap)/2;
         // pill
         var pillX = cx - convPillW/2;
@@ -225,7 +225,7 @@
         // HTML text for the conversion % (centered over pill)
         var cBox = el('div', null,
           'position:absolute;left:'+(pillX)+'px;top:'+pillY+'px;width:'+convPillW+'px;height:'+convLh+'px;line-height:'+convLh+'px;text-align:center;font-size:'+convSize+'px;color:'+ctx.cc('fg')+';font-weight:600;white-space:pre;font-variant-numeric:tabular-nums;');
-        cBox.textContent = pct+'%';
+        cBox.textContent = (pct==null ? '—' : pct+'%');
         ctx.mark(cBox,'text');
         root.appendChild(cBox);
         convs.push({pill:pill, text:cBox, pct:pct, y:y});
@@ -246,7 +246,8 @@
           svgEl.appendChild(tail);
           PKG.push({el:dot, tail:tail, yA:yA, yB:yB, tw:twI, bw:bwI,
                     fx: (ctx.hash(7+i, k) * 1.6 - 0.8),
-                    period: 2.4 + 0.6*ctx.hash(31+i, k), off: 3*ctx.hash(53+i, k)});
+                    // packet periods divide the view period so the clip loops seamlessly
+                    period: state.period/Math.max(1, Math.round(state.period/(2.4 + 0.6*ctx.hash(31+i, k)))), off: 3*ctx.hash(53+i, k)});
         }
       }
 
@@ -294,8 +295,8 @@
       return state;
     },
 
-    seek: function(t, ctx){
-      var s = (this.state||this._s);
+    seek: function(t, ctx, st){
+      var s = st || (ctx && ctx.state);
       if(!s) return;
       var period = s.period;
       var n = s.n;
