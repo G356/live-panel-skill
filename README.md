@@ -94,6 +94,28 @@ python3 scripts/check_frames.py --config examples/codex-agents/config.json --out
 
 1. Copy an example config. 2. Edit text, numbers, colours, positions. 3. Render, run `check_frames.py`, look at the PNGs. Nothing in `assets/template.html` has to change.
 
+## Views: pick a diagram shape (视图)
+
+Besides free-form boxes and wires, a config can hold `{"type":"view","kind":...}` elements: ready-made diagram shapes that lay themselves out inside a rect, work at 4:5 / 3:4 / 1:1 and in both themes, and animate by the same motion grammar. Contract and per-view data: [`references/views.md`](references/views.md); acceptance gate: `scripts/verify_view.py` ([`references/verify-view.md`](references/verify-view.md)).
+
+| what you want to show | view | status |
+| --- | --- | --- |
+| a loop that repeats (agent plan→act→verify, PDCA, release cycle) | `ring` - 3-8 steps on a circle, comet, lap counter | ready (`examples/ring/`) |
+| how many survive each stage (bug→merged PR, signup→paid) | `funnel` - widths proportional to values, conversion % between stages | ready (`examples/funnel/`) |
+| who relates to whom, clusters of a knowledge base or ecosystem | `nebula` - force layout by group, halos, packets on strong edges | planned |
+| work over time, parallel tracks, dependencies | `timeline` - lanes, playhead, done/active/pending | planned |
+| a hierarchy (agent → sub-agents → tools, org chart) | `tree` - tidy tree, expand/collapse without layout jumps | planned |
+| a few numbers to watch (latency, cost, pass rate) | `kpi` - card grid, big number, sparkline cursor = shown value | planned |
+| an architecture with arbitrary boxes and wires | no view: free-form `box`/`path`/`flow` elements (the three original examples) | ready |
+
+| ring (light-pastel 4:5) | funnel (light-pastel 4:5) |
+| --- | --- |
+| ![ring](examples/ring/screenshots/frame_1.png) | ![funnel](examples/funnel/screenshots/frame_1.png) |
+
+Each view example also has a terminal-dark 4:5 and a light-pastel 3:4 screenshot and an mp4 in its folder.
+
+Rule of thumb: one view per picture; if the story needs two shapes, make two clips. Unlabelled numbers are illustrative and must say so on screen.
+
 ## Themes and canvas
 
 ```jsonc
@@ -204,6 +226,20 @@ MIT for the code (see `LICENSE`; carve-outs for the recreated example designs ar
 **出处**：动法和样式学自 [@thedelost](https://x.com/thedelost) 的 Codex agent 分工动态图（<https://x.com/thedelost/status/2105398038026195279>），经 [@slashui](https://x.com/slashui) 引用转发（<https://x.com/slashui/status/2105850132365443528>）。`examples/codex-agents/` 是对原图的复刻，设计归原作者；`examples/agent-architecture/` 把小红书 @林纾 的《AI Agent 的完整架构》静态图做成动态版，原图设计归林纾，画面底部有出处；`examples/airbnb/` 的数字出自 [Latent.Space 访谈](https://www.latent.space/p/airbnb)，为 Airbnb 自述，画面里跳动的计数为示意。
 
 用法：`python3 scripts/render.py --config <配置> --out out.mp4`；自查：`python3 scripts/check_frames.py --config <配置> --out-dir frames --repeat`。主题用 `theme.preset`（`terminal-dark` / `light-pastel`），画幅用 `canvas.preset`（`4:5` 1200x1500、`3:4` 1080x1440、`1:1` 1080x1080）。坐标是画布像素，换画幅需要另存一份配置重排。
+
+### 视图怎么选
+
+| 想表达 | 用哪个视图 | 状态 |
+| --- | --- | --- |
+| 循环往复的流程（agent 规划→执行→验证→反思、PDCA、发版周期） | `ring` 环形 | 已完成 |
+| 每一步还剩多少（Bug→合并 PR、注册→付费） | `funnel` 漏斗 | 已完成 |
+| 谁和谁有关系、知识库/生态的聚类 | `nebula` 星云/关系图谱 | 待做 |
+| 随时间推进、多条并行泳道、依赖 | `timeline` 时间线/泳道 | 待做 |
+| 层级结构（主 agent→子 agent→工具、组织架构） | `tree` 层级树 | 待做 |
+| 盯几个关键数字（延迟、成本、通过率） | `kpi` 仪表盘矩阵 | 待做 |
+| 任意方框和连线的架构图 | 不用视图，自由摆放（三个原有例子） | 已有 |
+
+一张图一个视图；要讲两件事就出两段视频。没有真实来源的数字画面上要标“示意”。验收：`python3 scripts/verify_view.py --config <配置> --chrome "$CHROME"`，7 组组合全 PASS 才算完成。
 
 ### 常见问题（中文）
 

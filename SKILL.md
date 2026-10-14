@@ -19,6 +19,13 @@ Turn a description of a system into an **always-running architecture diagram**: 
 
 A single JSON config (schema: `references/config-schema.md`). It holds everything: canvas size, colours, boxes with lines of text, wires, packet paths, side-rail triggers, log wording, numbers. **The template never needs editing.** Start from the closest example: `examples/codex-agents/config.json` (terminal-dark, 4:5, recreation of @thedelost's picture), `examples/airbnb/config.json` (terminal-dark, Chinese content, figures from an interview) or `examples/agent-architecture/config.json` (light-pastel, 3:4, a static Xiaohongshu infographic made to move, original by 小红书 @林纾). Theme: `theme.preset`; canvas: `canvas.preset`. Positions are absolute canvas pixels, so another aspect ratio needs its own config.
 
+## Choosing a view (视图)
+
+If the content has one clear shape, use a `{"type":"view"}` element instead of placing boxes by hand (contract: `references/views.md`; gate: `scripts/verify_view.py` must PASS all 7 combos):
+- repeating loop → `ring`; stage-by-stage drop-off → `funnel` (both ready, see `examples/ring/`, `examples/funnel/`).
+- relationships/clusters → `nebula`; work over time/parallel tracks → `timeline`; hierarchy → `tree`; a few watched numbers → `kpi` (planned, not in this version yet).
+- an architecture with arbitrary boxes and wires → no view, free-form elements as in the original examples.
+
 ## Fixed procedure
 
 1. **Collect content and where each number comes from.** List boxes, who talks to whom, which things are "on call" triggers, what the log would say. Write the source (link or "simulated") next to every number. If a number has no real source, it is simulated: say so on screen (a footer line, or "(illustrative)" next to the counter). Never invent a figure and present it as real.
@@ -43,7 +50,8 @@ The page exposes `window.seek(t)`. Every visual is a pure function of `t` (and a
 
 - `assets/template.html` - the generic page. `scripts/scaffold.py` - short spec -> complete config (layout done for you). `scripts/render.py` - mp4. `scripts/check_frames.py` - checks + PNGs. `scripts/livepanel.py` - shared helpers (Chrome over the DevTools pipe, stdlib only).
 - `references/motion-grammar.md`, `references/config-schema.md`.
-- `examples/codex-agents/`, `examples/airbnb/`, `examples/agent-architecture/` - config, mp4 and screenshots.
+- `examples/codex-agents/`, `examples/airbnb/`, `examples/agent-architecture/` - config, mp4 and screenshots. `examples/ring/`, `examples/funnel/` - view examples.
+- `assets/views/<kind>.js` - one file per view; `references/views.md`, `references/view-rules.md`, `references/verify-view.md`; `scripts/verify_view.py`.
 
 ## Light theme notes
 
