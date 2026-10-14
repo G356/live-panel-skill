@@ -124,6 +124,14 @@ def build(spec):
         cfg["theme"]["colors"] = {"mute": "#aab1c0", "rd": "#f07178"}
         cfg["clock"] = {"start": "23:48:04", "rate": 3}
     E, MC = cfg["elements"], cfg["machines"]
+    # ids the caller chose (counters) are reserved up front; derived ids never take them
+    reserved = {str(c.get("id")) for c in (spec.get("counters") or []) if c.get("id")}
+
+    def fresh(base):
+        while base in MC or base in reserved:
+            base += "x"
+        reserved.add(base)
+        return base
     margin = 40
 
     # ---- header ----
@@ -231,11 +239,10 @@ def build(spec):
                     lines.append({"t": wl, "c": "mute" if dark else "fg"})
             bid = re.sub(r"\W+", "", (b.get("id") or b.get("name") or f"b{r}{j}").lower())[:12] or f"b{r}{j}"
             bid = f"r{r}{j}_{bid}" if not re.match(r"^[a-z_]", bid) else bid
-            while bid in MC:
-                bid += "x"
+            bid = fresh(bid)
             g = b.get("gauge")
             if g:
-                gid = bid + "_g"
+                gid = fresh(bid + "_g")
                 bad_above = g.get("bad", "above") == "above"
                 vals = [max(0.02, min(0.99, float(v))) for v in (g.get("values") or [0.32, 0.41, 0.55, 0.38, 0.81, 0.47])]
                 th = float(g.get("threshold", 0.6))
@@ -249,17 +256,31 @@ def build(spec):
                                   "msgs": gl, "tail": "{value} {label}"}
                 hi_c = MC[gid]["highColor"]; lo_c = MC[gid]["lowColor"]
                 labw = M.w(g.get("label", ""), FS) + 10 if g.get("label") else 0
-                barw = max(40, min(220, inner - labw - M.w("0.00", FS) - 14))
+                valw = M.w("0." + "0" * int(g.get("decimals", 2)), FS) + 14
+                val_run = {"runs": [{"v": gid, "c": "fg" if dark else "ink"}]}
+                # size the row to the box: label | bar | value on one line only when all three fit,
+                # else the label goes on its own line, else the value too (narrow 1:1 boxes)
+                if inner - labw - valw >= 40 + 10:
+                    lab_inline, val_inline, barw = True, True, min(220, inner - labw - valw - 10)
+                elif inner - valw >= 24 + 10:
+                    lab_inline, val_inline, barw = False, True, min(220, inner - valw - 10)
+                else:
+                    lab_inline, val_inline, barw = False, False, max(16, min(220, inner - 10))
+                if labw and not lab_inline:
+                    lines.append({"runs": [{"t": M.clip(g.get("label"), inner, FS), "c": "dim"}]})
                 items = []
-                if labw:
+                if labw and lab_inline:
                     items.append({"w": int(labw), "runs": [{"t": g.get("label"), "c": "dim"}]})
                 items.append({"w": int(barw + 10), "bar": {"gauge": gid, "w": int(barw), "h": 16, "high": hi_c, "low": lo_c}})
-                items.append({"runs": [{"v": gid, "c": "fg" if dark else "ink"}]})
+                if val_inline:
+                    items.append(val_run)
                 lines.append({"items": items, "align": "left"})
+                if not val_inline:
+                    lines.append(val_run)
                 lines.append({"runs": [{"t": "→ ", "c": "dim"}, {"v": gid + ".label"}]})
             ln_ = b.get("lane")
             if ln_:
-                lid = bid + "_l"
+                lid = fresh(bid + "_l")
                 per = 7 + 1.0 * (j % 3) + 0.5 * r
                 MC[lid] = {"type": "lane", "period": per, "run": round(per * 0.68, 1), "off": round(0.7 * j + 0.3 * r, 1),
                            "busy": ln_.get("busy", "running"), "done": ln_.get("done", ["done"]), "phase": j}
