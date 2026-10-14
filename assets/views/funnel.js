@@ -82,10 +82,24 @@
       var labelW = Math.round(bodyW*0.18);
       var valW = Math.round(bodyW*0.12);
 
+      var logScale = e.scale === 'log';
+      // log stages stay wide near the top, so keep the bar clear of the label and value columns
+      if(logScale) maxBarW = bodyW - 2*Math.max(labelW, valW) - 4*u;
+      var vminPos = stages.reduce(function(m,s){ return s.value>0 ? Math.min(m,s.value) : m; }, vmax);
       function barW(v){
+        if(logScale && vmax > vminPos){
+          // log width for data spanning orders of magnitude (people, tokens): the smallest stage sits at the floor
+          var f = v>0 ? (Math.log(v)-Math.log(vminPos))/(Math.log(vmax)-Math.log(vminPos)) : 0;
+          return Math.round(maxBarW*(0.14 + 0.86*Math.max(0,f)));
+        }
         // honest linear width; a floor only for stages below 14% of the top
         return Math.round(Math.max(maxBarW*0.14, maxBarW*v/vmax));
       }
+      // palette: default one accent per stage; "mono" = one quiet accent, the focus stage (default last) in a hot accent
+      var mono = e.palette === 'mono';
+      var focusI = (typeof e.focus === 'number') ? e.focus : n-1;
+      function stAcc(i){ return mono ? (i===focusI ? 'acc2' : 'acc1') : ctx.acc(i); }
+      function stAccf(i){ return mono ? (i===focusI ? 'accf2' : 'accf1') : ctx.accf(i); }
 
       // centre X of funnel
       var cx = w/2;
@@ -132,8 +146,8 @@
           [cx + bw/2, yBot],
           [cx - bw/2, yBot]
         ];
-        var acc = ctx.acc(i);
-        var accf = ctx.accf(i);
+        var acc = stAcc(i);
+        var accf = stAccf(i);
         var poly = svg(ctx,'polygon',{
           points: pts.map(function(p){return p[0]+','+p[1]}).join(' '),
           fill: ctx.cc(accf),
@@ -167,12 +181,14 @@
       }
 
       // Labels (HTML for reliable CJK rendering)
-      var labelSize = Math.max(12, Math.min(u*1.55, 17));
+      var ls = Number(e.labelScale)||1;
+      var labelSize = Math.max(12, Math.min(u*1.55*ls, 17*ls));
       var labelLh = Math.round(labelSize*1.55);
       var subSize = Math.max(11, Math.round(labelSize*0.82));
       var subLh = Math.round(subSize*1.55);
 
-      var valSize = Math.max(14, Math.min(u*2.0, 22));
+      var vs = Number(e.valueScale)||1;
+      var valSize = Math.max(14, Math.min(u*2.0*vs, 22*vs));
       var valLh = Math.round(valSize*1.3);
 
       var stageLabels = stages.map(function(s,i){
@@ -245,7 +261,7 @@
         var twI = barW(stages[i].value), bwI = (i<n-1)? barW(stages[i+1].value) : Math.round(twI*0.92);
         var nPkg = Math.max(1, Math.round(8*stages[i].value/vmax));   // density follows the value
         for(var k=0;k<nPkg;k++){
-          var colI = ctx.acc(i);
+          var colI = stAcc(i);
           var dot = svg(ctx,'circle',{cx:cx, cy:yA, r: dark? 3 : 3.4, fill: ctx.cc(colI), opacity:0.9});
           svgEl.appendChild(dot);
           var tail = svg(ctx,'circle',{cx:cx, cy:yA, r: dark? 1.7 : 2, fill: ctx.cc(colI), opacity:0.4});
@@ -274,8 +290,8 @@
         ];
         var poly = svg(ctx,'polygon',{
           points: pts.map(function(p){return p[0]+','+p[1]}).join(' '),
-          fill: dark? ctx.cc(ctx.acc(i)) : 'none',
-          stroke: ctx.cc(ctx.acc(i)),
+          fill: dark? ctx.cc(stAcc(i)) : 'none',
+          stroke: ctx.cc(stAcc(i)),
           'stroke-width': dark?'1.5':'2.5',
           'stroke-linejoin':'round',
           opacity:'0',
