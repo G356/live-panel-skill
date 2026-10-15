@@ -67,12 +67,14 @@ def views_html():
     return "\n".join(out)
 
 
-def _font_face(family, path, weight, chars):
-    """One @font-face rule with the font file inlined as a data URL. A file over 400 KB (a full CJK font) is
+def _font_face(family, path, weight, chars, subset_ok=True):
+    """One @font-face rule with the font file inlined as a data URL. A TTF/OTF over 400 KB (a full CJK font) is
     subset to the characters the config actually uses when fontTools is installed, so the page stays small."""
     import base64
-    data, fmt = Path(path).read_bytes(), "truetype"
-    if len(data) > 400_000:
+    data = Path(path).read_bytes()
+    ext = Path(path).suffix.lower()
+    fmt = {".woff2": "woff2", ".woff": "woff", ".otf": "opentype"}.get(ext, "truetype")
+    if subset_ok and chars and fmt in ("truetype", "opentype") and len(data) > 400_000:
         try:
             import io
             from fontTools import subset
@@ -82,13 +84,10 @@ def _font_face(family, path, weight, chars):
             buf = io.BytesIO(); subset.save_font(font, buf, opts); data, fmt = buf.getvalue(), "woff"
         except ImportError:
             print(f"note: fontTools not installed, embedding all of {path} ({len(data) // 1024} KB)", file=sys.stderr)
-    elif path.endswith(".woff2"):
-        fmt = "woff2"
-    elif path.endswith(".woff"):
-        fmt = "woff"
+    mime = {"woff2": "font/woff2", "woff": "font/woff", "opentype": "font/otf", "truetype": "font/ttf"}[fmt]
     b64 = base64.b64encode(data).decode("ascii")
-    return ('@font-face{font-family:"%s";src:url(data:font/%s;base64,%s) format("%s");font-weight:%s;font-display:block}'
-            % (family, fmt if fmt != "truetype" else "ttf", b64, fmt, weight or "100 900"))
+    return ('@font-face{font-family:"%s";src:url(data:%s;base64,%s) format("%s");font-weight:%s;font-display:block}'
+            % (family, mime, b64, fmt, weight or "100 900"))
 
 
 def fonts_html(cfg, base_dir=None):
@@ -99,7 +98,7 @@ def fonts_html(cfg, base_dir=None):
     rules = []
     if th.get("titleFont") == "smiley":
         f = ROOT / "assets" / "fonts" / "SmileySans-Oblique.woff2"
-        rules.append(_font_face("Smiley Sans", str(f), None, ""))
+        rules.append(_font_face("Smiley Sans", str(f), None, "", subset_ok=False))
     if th.get("fonts"):
         chars = "".join(sorted(set(json.dumps(cfg, ensure_ascii=False)) | set(map(chr, range(32, 127))) | set("…·—–×→←↑↓✓“”‘’（）：，。、；？！「」《》")))
         for f in th["fonts"]:
