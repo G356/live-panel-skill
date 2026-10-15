@@ -239,6 +239,22 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
 
   - every marked node (text, edges, boxes) has a static style; focus, lit edges, tokens, dots and
     glow are separate unmarked elements whose opacity is the only thing `seek` changes.
+- **sketchboard**: a hand-drawn "A vs B" explainer board in the DailyDose-of-DS style (example: `examples/hybrid-agent/`).
+  Drawn in a 1280x1140 base space and scaled uniformly into the rect. Keys: `title:[{t, hue?}]` (runs; `hue`
+  g|b|y|r draws a highlight chip), `titleSize` (54), `page` ("1/5", top right; empty = none), `period` (3),
+  `split` (0.38, left panel share), `panelH` (722),
+  `left:{hue,title,sub,foot,blocks:[card | {type:"stream",title,tokens:[...],unit,tokenSize,cap,capIcon,h}]}`
+  (vertical chain, arrows + packets between blocks; a stream emits its token chips one by one, its counter
+  equals the chips shown), `right:{hue,title,sub,foot,sections:[{n,title,note,h,cardH,items:[card],loop?,loopLabel,laps,cap}]}`
+  (each section one horizontal chain; `loop:true` closes it with a dashed return path and a packet that
+  goes silent inside the cards), `table:{brand?,question:"a\nb",cols:[{t,hue}],rows:[{icon,label,cells:[str | {t,b?,bar?}]}]}`
+  (`bar` 0..1 = an honest ratio of the two numbers). card = `{label, sub?, icon?, w?, h?, size?, mono?, style:"card"|"white", hue?, align?, typed?, cap?}`;
+  `typed:true` types the label out once per period. Icons: `doc chip wrench link search code eye timer gauge chart bolt brain trend`.
+  The look ("sketch theme") is plain config, shared by every page of a series: `theme.preset:"light-pastel"` +
+  `theme.font` + `theme.fonts:[{family,src,weight}]` (embedded by `build_page`; files over 400 KB are subset to the
+  characters of the config when fontTools is installed) + colour names `<hue>bg bd pill pbd card cbd tx hl` (and `bin`,
+  `yrow`, `wcard`, `gdot`, `accent`). Brand comes from top-level `series.brand` (or `table.brand`), source from `credit`.
+  For a 4-5 page series keep `meta/canvas/theme/series/credit` identical and change only the view element (+ `page`).
 - **kpi**: `cards:[{label,value,unit?,delta?,series:[numbers],status?}]`, grid auto-chosen by count
   and rect aspect; each card: label, big number (title font), delta coloured ok/bad, sparkline of
   series with a moving cursor whose y equals the shown value at that time (one truth), status dot.
