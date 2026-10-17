@@ -54,6 +54,30 @@ def load_config(path):
         return json.load(f)
 
 
+def views_html():
+    """Every assets/views/*.js (sorted, '_' prefix skipped) as inline <script> tags, so the page stays self-contained."""
+    d = ROOT / "assets" / "views"
+    if not d.is_dir():
+        return ""
+    out = []
+    for f in sorted(d.glob("*.js")):
+        if f.name.startswith("_"):
+            continue
+        out.append("<script>/* view: %s */\n%s\n</script>" % (f.name, f.read_text(encoding="utf-8").replace("</script", "<\\/script")))
+    return "\n".join(out)
+
+
+def fonts_html(cfg):
+    """Embed Smiley Sans (得意黑, OFL) as a data URL when theme.titleFont == "smiley"; nothing otherwise."""
+    if (cfg.get("theme") or {}).get("titleFont") != "smiley":
+        return ""
+    import base64
+    f = ROOT / "assets" / "fonts" / "SmileySans-Oblique.woff2"
+    b64 = base64.b64encode(f.read_bytes()).decode("ascii")
+    return ('<style>@font-face{font-family:"Smiley Sans";src:url(data:font/woff2;base64,%s) format("woff2");'
+            'font-display:block}</style>' % b64)
+
+
 def build_page(config_path, out_path, template=None):
     """Write a self-contained HTML file: template with the JSON config embedded. Returns the config dict."""
     cfg = load_config(config_path)
@@ -62,7 +86,9 @@ def build_page(config_path, out_path, template=None):
     tag = f'<script id="live-config" type="application/json">{blob}</script>'
     if "<!--LIVE_CONFIG-->" not in tpl:
         sys.exit("template has no <!--LIVE_CONFIG--> placeholder")
-    Path(out_path).write_text(tpl.replace("<!--LIVE_CONFIG-->", tag), encoding="utf-8")
+    page = tpl.replace("<!--LIVE_CONFIG-->", tag)
+    page = page.replace("<!--LIVE_VIEWS-->", views_html()).replace("<!--LIVE_FONTS-->", fonts_html(cfg))
+    Path(out_path).write_text(page, encoding="utf-8")
     return cfg
 
 
