@@ -82,6 +82,7 @@ def _font_face(family, path, weight, chars, subset_ok=True):
             font = subset.load_font(path, opts)
             sub = subset.Subsetter(opts); sub.populate(text=chars); sub.subset(font)
             buf = io.BytesIO(); subset.save_font(font, buf, opts); data, fmt = buf.getvalue(), "woff"
+            font.close()  # fontTools keeps the source open; leaked fds push render.py's Chrome pipes past fd 9, which sh cannot redirect
         except ImportError:
             print(f"note: fontTools not installed, embedding all of {path} ({len(data) // 1024} KB)", file=sys.stderr)
     mime = {"woff2": "font/woff2", "woff": "font/woff", "opentype": "font/otf", "truetype": "font/ttf"}[fmt]

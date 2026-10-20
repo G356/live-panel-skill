@@ -255,6 +255,23 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
   characters of the config when fontTools is installed) + colour names `<hue>bg bd pill pbd card cbd tx hl` (and `bin`,
   `yrow`, `wcard`, `gdot`, `accent`). Brand comes from top-level `series.brand` (or `table.brand`), source from `credit`.
   For a 4-5 page series keep `meta/canvas/theme/series/credit` identical and change only the view element (+ `page`).
+- **excalidraw**: a hand-drawn Excalidraw diagram that keeps running (examples: `examples/excalidraw-aqua/`, English
+  recreation of Google adk-recipes' AQuA inner/outer loop; `examples/excalidraw-gardener/`, Chinese). Drawn in a design
+  space `space:[W,H]` (default 1000x1250) scaled uniformly into the rect. Boxes, arrows and icons are rough.js 4.6.6 (MIT,
+  bundled inside the view file, fixed seeds). Keys: `period`, `t0` (start offset, so frame 0 can be any moment of the
+  loop), `seed`, `roughness` (1.35), `strokeWidth` (2.6), `edgeRough` (0.9), `edgeGap` (22, room for the focus loop),
+  `edgeMulti` (true: a second, shorter pen stroke on solid arrows), `textWeight` (0.5), `noteSize`,
+  `boil:{step,variants,amp}` (0.125 s, 4, 0.6; `period/step` must be a whole multiple of `variants`),
+  `texts:[{t,x,y,size,c,align,w,lh,rot,weight,underline:{hue?,width,dy,tilt}}]`, `icons:[{kind:laptop|cloud|sprout|server|person,x,y,w}]`,
+  `nodes:[{id,t,sub?,x,y,w,h,hue,size?,subSize?,subC?,r?,weight?}]` (hue blue|green|red|yellow|violet|gray|white = Excalidraw
+  palette index 1 fills, overridable per theme with colours `x<hue>`, `x<hue>s`, `x<hue>d`),
+  `edges:[{id,from,to,fromSide,toSide,fromOff,toOff,bend,width?,dashed?,label?,labelAt?,labelAlign?} | {id,pts:[[x,y],...]}]`,
+  `steps:[{node,edge?,note?,at?,align?,dur?}]`. Motion: everything boils; dashed edges march (a whole number of dash
+  cycles per period); exactly one step is the protagonist: its box gets a pen loop (drawn on), its note is handwritten in
+  next to it, then its edge is inked in the box's strong colour behind a dot (solid) or a paper note (dashed); the previous
+  step fades over 0.35 s. The look is plain config: `theme.preset:"light-pastel"`, `theme.font:"Excalifont, Xiaolai, ..."`,
+  `theme.fonts` with `Excalifont-Regular-Latin.woff2` (OFL, in assets/fonts) and `Xiaolai-Regular.ttf` (OFL, fetch with
+  `scripts/fetch_fonts.sh`; subset per config by build_page).
 - **kpi**: `cards:[{label,value,unit?,delta?,series:[numbers],status?}]`, grid auto-chosen by count
   and rect aspect; each card: label, big number (title font), delta coloured ok/bad, sparkline of
   series with a moving cursor whose y equals the shown value at that time (one truth), status dot.

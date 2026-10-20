@@ -1,0 +1,445 @@
+{
+ "meta": {
+  "title": "园丁 loop（excalidraw 主题）",
+  "lang": "zh-CN"
+ },
+ "canvas": {
+  "preset": "3:4",
+  "duration": 22.5,
+  "fps": 30
+ },
+ "theme": {
+  "preset": "light-pastel",
+  "font": "Excalifont, Xiaolai, \"Noto Sans CJK SC\", sans-serif",
+  "fonts": [
+   {
+    "family": "Excalifont",
+    "src": "Excalifont-Regular-Latin.woff2",
+    "weight": "400"
+   },
+   {
+    "family": "Xiaolai",
+    "src": "Xiaolai-Regular.ttf",
+    "weight": "400"
+   }
+  ],
+  "colors": {
+   "bg": "#ffffff",
+   "muted": "#5c636b"
+  }
+ },
+ "credit": {
+  "text": "数据：园丁 README（B 段最佳候选 30 题 10%→57%，作者 loop 机实测；C 段「审美」攒到 5 次后作者提前批准）\n门槛 2 / 6 次借自胡海岚团队 Science 2017 · 动效为示意 · live-panel excalidraw 主题",
+  "y": 1406,
+  "size": 12.5,
+  "lh": 16,
+  "c": "#868e96",
+  "font": "\"Noto Sans CJK SC\", sans-serif"
+ },
+ "elements": [
+  {
+   "type": "view",
+   "kind": "excalidraw",
+   "space": [
+    1000,
+    1330
+   ],
+   "period": 22.5,
+   "t0": 8.7,
+   "seed": 5,
+   "boil": {
+    "step": 0.125,
+    "variants": 4,
+    "amp": 0.6
+   },
+   "noteSize": 29,
+   "roughness": 1.35,
+   "strokeWidth": 2.6,
+   "texts": [
+    {
+     "t": "园丁 loop · 让 AI 每天复盘一次自己",
+     "x": 500,
+     "y": 92,
+     "size": 50,
+     "c": "ink",
+     "weight": 0.6,
+     "underline": {
+      "hue": "yellow",
+      "width": 16,
+      "dy": 22,
+      "tilt": -4
+     }
+    },
+    {
+     "t": "每天早上：\n复盘昨天",
+     "x": 118,
+     "y": 221,
+     "size": 28,
+     "c": "slate"
+    },
+    {
+     "t": "跨天：\n验证 → 点头 → 固化",
+     "x": 178,
+     "y": 1272,
+     "size": 26,
+     "c": "sage"
+    },
+    {
+     "t": "真实数据 · B 段",
+     "x": 170,
+     "y": 664,
+     "size": 25,
+     "c": "red"
+    },
+    {
+     "t": "最佳候选规则，30 题",
+     "x": 170,
+     "y": 702,
+     "size": 25,
+     "c": "red"
+    },
+    {
+     "t": "10% → 57%",
+     "x": 170,
+     "y": 756,
+     "size": 42,
+     "c": "red",
+     "weight": 0.7
+    },
+    {
+     "t": "没过 75% 线，一条没提",
+     "x": 170,
+     "y": 810,
+     "size": 24,
+     "c": "red"
+    }
+   ],
+   "icons": [
+    {
+     "kind": "sprout",
+     "x": 928,
+     "y": 1197,
+     "w": 84
+    }
+   ],
+   "nodes": [
+    {
+     "id": "daily",
+     "t": "每日复盘",
+     "sub": "读完昨天全部对话",
+     "x": 500,
+     "y": 288,
+     "w": 300,
+     "h": 116,
+     "hue": "blue",
+     "size": 42,
+     "subSize": 24,
+     "subC": "#495057"
+    },
+    {
+     "id": "A",
+     "t": "A 成果",
+     "sub": "每天最多 3 条",
+     "x": 185,
+     "y": 517,
+     "w": 250,
+     "h": 118,
+     "hue": "green",
+     "size": 36,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "B",
+     "t": "B 失败模式",
+     "sub": "被纠正、返工",
+     "x": 500,
+     "y": 517,
+     "w": 250,
+     "h": 118,
+     "hue": "red",
+     "size": 36,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "C",
+     "t": "C 成功模式",
+     "sub": "被夸、被拿去发",
+     "x": 815,
+     "y": 517,
+     "w": 250,
+     "h": 118,
+     "hue": "yellow",
+     "size": 36,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "test",
+     "t": "loop 机实测",
+     "sub": "合格率至少 75%\n且比无规则高 25 点",
+     "x": 500,
+     "y": 777,
+     "w": 330,
+     "h": 150,
+     "hue": "blue",
+     "size": 36,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "count",
+     "t": "攒次数",
+     "sub": "满 2 次：待固化\n满 6 次：已固化",
+     "x": 838,
+     "y": 777,
+     "w": 250,
+     "h": 150,
+     "hue": "yellow",
+     "size": 36,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "nod",
+     "t": "青月点头",
+     "sub": "人是闸门",
+     "x": 680,
+     "y": 1018,
+     "w": 250,
+     "h": 112,
+     "hue": "violet",
+     "size": 40,
+     "subSize": 26,
+     "subC": "#495057"
+    },
+    {
+     "id": "rule",
+     "t": "写进常驻规矩",
+     "x": 680,
+     "y": 1220,
+     "w": 320,
+     "h": 100,
+     "hue": "green",
+     "size": 40,
+     "subSize": 26,
+     "subC": "#495057"
+    }
+   ],
+   "edges": [
+    {
+     "id": "dA",
+     "from": "daily",
+     "to": "A",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0.08,
+     "fromOff": -0.62,
+     "toOff": 0
+    },
+    {
+     "id": "dB",
+     "from": "daily",
+     "to": "B",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0.0,
+     "fromOff": 0,
+     "toOff": 0
+    },
+    {
+     "id": "dC",
+     "from": "daily",
+     "to": "C",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": -0.08,
+     "fromOff": 0.62,
+     "toOff": 0
+    },
+    {
+     "id": "Bt",
+     "from": "B",
+     "to": "test",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0.0,
+     "fromOff": 0,
+     "toOff": 0
+    },
+    {
+     "id": "Cc",
+     "from": "C",
+     "to": "count",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0,
+     "fromOff": 0.18,
+     "toOff": 0
+    },
+    {
+     "id": "tn",
+     "from": "test",
+     "to": "nod",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0.12,
+     "fromOff": 0.45,
+     "toOff": -0.5
+    },
+    {
+     "id": "cn",
+     "from": "count",
+     "to": "nod",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": -0.12,
+     "fromOff": -0.4,
+     "toOff": 0.5
+    },
+    {
+     "id": "nr",
+     "from": "nod",
+     "to": "rule",
+     "fromSide": "bottom",
+     "toSide": "top",
+     "bend": 0.0,
+     "fromOff": 0,
+     "toOff": 0
+    },
+    {
+     "id": "back",
+     "from": "rule",
+     "to": "daily",
+     "dashed": true,
+     "pts": [
+      [
+       508,
+       1220
+      ],
+      [
+       150,
+       1184
+      ],
+      [
+       34,
+       818
+      ],
+      [
+       40,
+       475
+      ],
+      [
+       128,
+       309
+      ],
+      [
+       328,
+       288
+      ]
+     ],
+     "label": "第二天继续积累",
+     "labelAt": [
+      108,
+      1078
+     ],
+     "labelAlign": "left",
+     "labelSize": 28
+    }
+   ],
+   "steps": [
+    {
+     "node": "daily",
+     "edge": "dA",
+     "note": "读完昨天的对话",
+     "at": [
+      500,
+      186
+     ],
+     "align": "center"
+    },
+    {
+     "node": "daily",
+     "edge": "dB",
+     "note": "记下被纠正的地方",
+     "at": [
+      500,
+      186
+     ],
+     "align": "center"
+    },
+    {
+     "node": "B",
+     "edge": "Bt",
+     "note": "≥2 次才写候选规则",
+     "at": [
+      522,
+      644
+     ],
+     "align": "left"
+    },
+    {
+     "node": "test",
+     "edge": null,
+     "note": "还差 18 个点",
+     "at": [
+      450,
+      904
+     ],
+     "align": "center"
+    },
+    {
+     "node": "daily",
+     "edge": "dC",
+     "note": "记下被夸的地方",
+     "at": [
+      500,
+      186
+     ],
+     "align": "center"
+    },
+    {
+     "node": "C",
+     "edge": "Cc",
+     "note": "按底层原则归类",
+     "at": [
+      800,
+      644
+     ],
+     "align": "right"
+    },
+    {
+     "node": "count",
+     "edge": "cn",
+     "note": "审美攒到 5 次",
+     "at": [
+      990,
+      904
+     ],
+     "align": "right"
+    },
+    {
+     "node": "nod",
+     "edge": "nr",
+     "note": "提前批准固化",
+     "at": [
+      830,
+      1018
+     ],
+     "align": "left"
+    },
+    {
+     "node": "rule",
+     "edge": "back",
+     "note": "明天开工就读",
+     "at": [
+      902,
+      1130
+     ],
+     "align": "center"
+    }
+   ]
+  }
+ ]
+}
