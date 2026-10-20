@@ -118,6 +118,8 @@ Besides free-form boxes and wires, a config can hold `{"type":"view","kind":...}
 | ![ring view, animated](examples/ring/preview.webp) | ![funnel view, animated](examples/funnel/preview.webp) |
 | **`loop` - packets on every wire, marching loop-backs, icons that move** | **`loop`, light-pastel** |
 | ![loop view, animated](examples/loop-poteto/preview-dark.webp) | ![loop view light, animated](examples/loop-poteto/preview-light.webp) |
+| **`excalidraw` - hand-drawn Excalidraw look that keeps running: pen loops, inked arrows, boiling lines** | **`excalidraw`, Chinese (小赖 Xiaolai handwriting)** |
+| ![excalidraw view, AQuA, animated](examples/excalidraw-aqua/preview.webp) | ![excalidraw view, gardener loop, animated](examples/excalidraw-gardener/preview.webp) |
 
 Every view example also has an mp4 in its folder.
 

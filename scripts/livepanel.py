@@ -67,15 +67,51 @@ def views_html():
     return "\n".join(out)
 
 
-def fonts_html(cfg):
-    """Embed Smiley Sans (得意黑, OFL) as a data URL when theme.titleFont == "smiley"; nothing otherwise."""
-    if (cfg.get("theme") or {}).get("titleFont") != "smiley":
-        return ""
+def _font_face(family, path, weight, chars, subset_ok=True):
+    """One @font-face rule with the font file inlined as a data URL. A TTF/OTF over 400 KB (a full CJK font) is
+    subset to the characters the config actually uses when fontTools is installed, so the page stays small."""
     import base64
-    f = ROOT / "assets" / "fonts" / "SmileySans-Oblique.woff2"
-    b64 = base64.b64encode(f.read_bytes()).decode("ascii")
-    return ('<style>@font-face{font-family:"Smiley Sans";src:url(data:font/woff2;base64,%s) format("woff2");'
-            'font-display:block}</style>' % b64)
+    data = Path(path).read_bytes()
+    ext = Path(path).suffix.lower()
+    fmt = {".woff2": "woff2", ".woff": "woff", ".otf": "opentype"}.get(ext, "truetype")
+    if subset_ok and chars and fmt in ("truetype", "opentype") and len(data) > 400_000:
+        try:
+            import io
+            from fontTools import subset
+            opts = subset.Options(); opts.flavor = "woff"; opts.layout_features = ["*"]
+            font = subset.load_font(path, opts)
+            sub = subset.Subsetter(opts); sub.populate(text=chars); sub.subset(font)
+            buf = io.BytesIO(); subset.save_font(font, buf, opts); data, fmt = buf.getvalue(), "woff"
+            font.close()  # fontTools keeps the source open; leaked fds push render.py's Chrome pipes past fd 9, which sh cannot redirect
+        except ImportError:
+            print(f"note: fontTools not installed, embedding all of {path} ({len(data) // 1024} KB)", file=sys.stderr)
+    mime = {"woff2": "font/woff2", "woff": "font/woff", "opentype": "font/otf", "truetype": "font/ttf"}[fmt]
+    b64 = base64.b64encode(data).decode("ascii")
+    return ('@font-face{font-family:"%s";src:url(data:%s;base64,%s) format("%s");font-weight:%s;font-display:block}'
+            % (family, mime, b64, fmt, weight or "100 900"))
+
+
+def fonts_html(cfg, base_dir=None):
+    """Embed fonts as data URLs: Smiley Sans (得意黑, OFL) when theme.titleFont == "smiley", and every entry of
+    theme.fonts ([{family, src, weight?}], src relative to the config file) so a custom look (e.g. the hand-drawn
+    sketch theme) stays one self-contained page."""
+    th = cfg.get("theme") or {}
+    rules = []
+    if th.get("titleFont") == "smiley":
+        f = ROOT / "assets" / "fonts" / "SmileySans-Oblique.woff2"
+        rules.append(_font_face("Smiley Sans", str(f), None, "", subset_ok=False))
+    if th.get("fonts"):
+        chars = "".join(sorted(set(json.dumps(cfg, ensure_ascii=False)) | set(map(chr, range(32, 127))) | set("…·—–×→←↑↓✓“”‘’（）：，。、；？！「」《》")))
+        for f in th["fonts"]:
+            src = Path(f["src"])
+            if not src.is_absolute():
+                cand = [Path(base_dir or ".") / src, ROOT / "assets" / "fonts" / src]
+                src = next((c for c in cand if c.exists()), cand[0])
+            if not src.exists():
+                print(f"note: theme.fonts: {f['src']} not found, falling back to the next font in theme.font", file=sys.stderr)
+                continue
+            rules.append(_font_face(f["family"], str(src), f.get("weight"), chars))
+    return "<style>%s</style>" % "".join(rules) if rules else ""
 
 
 def build_page(config_path, out_path, template=None):
@@ -87,7 +123,7 @@ def build_page(config_path, out_path, template=None):
     if "<!--LIVE_CONFIG-->" not in tpl:
         sys.exit("template has no <!--LIVE_CONFIG--> placeholder")
     page = tpl.replace("<!--LIVE_CONFIG-->", tag)
-    page = page.replace("<!--LIVE_VIEWS-->", views_html()).replace("<!--LIVE_FONTS-->", fonts_html(cfg))
+    page = page.replace("<!--LIVE_VIEWS-->", views_html()).replace("<!--LIVE_FONTS-->", fonts_html(cfg, Path(config_path).resolve().parent))
     Path(out_path).write_text(page, encoding="utf-8")
     return cfg
 
