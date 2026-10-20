@@ -25,12 +25,17 @@
   ],
   "colors": {
    "bg": "#ffffff",
-   "muted": "#5c636b"
+   "muted": "#5c636b",
+   "xblue": "#b8d3ec",
+   "xgreen": "#bedcb9",
+   "xyellow": "#f5e49e",
+   "xred": "#ecbcb6",
+   "xviolet": "#d3c6ef"
   }
  },
  "credit": {
-  "text": "数据：园丁 README（B 段最佳候选 30 题 10%→57%，作者 loop 机实测；C 段「审美」攒到 5 次后作者提前批准）\n门槛 2 / 6 次借自胡海岚团队 Science 2017 · 动效为示意 · live-panel excalidraw 主题",
-  "y": 1466,
+  "text": "数据：园丁 README（B 段最佳候选 30 题 10%→57%，作者 loop 机实测；C 段「审美」攒到 5 次后作者提前批准）\n门槛 2 / 6 次借自胡海岚团队 Science 2017 · 动效为示意 · https://github.com/ythx-101/gardener-loop · live-panel excalidraw 主题",
+  "y": 1472,
   "size": 12.5,
   "lh": 16,
   "c": "#868e96",
@@ -50,11 +55,31 @@
    "boil": {
     "step": 0.125,
     "variants": 4,
-    "amp": 0.6
+    "amp": 0.5
    },
    "noteSize": 29,
-   "roughness": 1.35,
+   "roughness": 1.05,
    "strokeWidth": 2.6,
+   "edgeRough": 0.8,
+   "edgeMulti": false,
+   "zones": [
+    {
+     "x": 72,
+     "y": 132,
+     "w": 918,
+     "h": 434,
+     "fill": "#f1f6fc",
+     "r": 40
+    },
+    {
+     "x": 72,
+     "y": 598,
+     "w": 918,
+     "h": 606,
+     "fill": "#f1f7ef",
+     "r": 40
+    }
+   ],
    "texts": [
     {
      "t": "园丁 loop · 让 AI 每天复盘一次自己",
@@ -71,55 +96,41 @@
      }
     },
     {
-     "t": "每天早上：\n复盘昨天",
-     "x": 118,
+     "t": "每天早上\n复盘昨天",
+     "x": 134,
      "y": 186,
      "size": 28,
      "c": "slate"
     },
     {
-     "t": "跨天：\n验证 → 点头 → 固化",
-     "x": 178,
-     "y": 1196,
-     "size": 26,
-     "c": "sage"
-    },
-    {
-     "t": "真实数据 · B 段",
-     "x": 170,
-     "y": 612,
-     "size": 25,
-     "c": "red"
-    },
-    {
-     "t": "最佳候选规则，30 题",
-     "x": 170,
-     "y": 648,
-     "size": 25,
+     "t": "实测 · B 段 30 题",
+     "x": 184,
+     "y": 664,
+     "size": 22,
      "c": "red"
     },
     {
      "t": "10% → 57%",
-     "x": 170,
-     "y": 700,
-     "size": 42,
+     "x": 184,
+     "y": 712,
+     "size": 36,
      "c": "red",
      "weight": 0.7
     },
     {
-     "t": "没过 75% 线，一条没提",
-     "x": 170,
-     "y": 752,
-     "size": 24,
+     "t": "未达 75% · 0 条入规",
+     "x": 184,
+     "y": 762,
+     "size": 22,
      "c": "red"
     }
    ],
    "icons": [
     {
      "kind": "sprout",
-     "x": 928,
-     "y": 1124,
-     "w": 84
+     "x": 900,
+     "y": 1092,
+     "w": 92
     }
    ],
    "nodes": [
@@ -134,20 +145,20 @@
      "hue": "blue",
      "size": 42,
      "subSize": 24,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "A",
      "t": "A 成果",
      "sub": "每天最多 3 条",
-     "x": 185,
+     "x": 200,
      "y": 470,
-     "w": 250,
+     "w": 236,
      "h": 118,
      "hue": "green",
      "size": 36,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "B",
@@ -160,23 +171,24 @@
      "hue": "red",
      "size": 36,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "C",
      "t": "C 成功模式",
      "sub": "被夸、被拿去发",
-     "x": 815,
+     "x": 800,
      "y": 470,
-     "w": 250,
+     "w": 236,
      "h": 118,
      "hue": "yellow",
      "size": 36,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "test",
+     "focusOff": 15,
      "t": "loop 机实测",
      "sub": "合格率至少 75%\n且比无规则高 25 点",
      "x": 500,
@@ -186,20 +198,20 @@
      "hue": "blue",
      "size": 36,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "count",
      "t": "攒次数",
      "sub": "满 2 次：待固化\n满 6 次：已固化",
-     "x": 838,
+     "x": 830,
      "y": 720,
      "w": 250,
      "h": 150,
      "hue": "yellow",
      "size": 36,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "nod",
@@ -212,19 +224,19 @@
      "hue": "violet",
      "size": 40,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     },
     {
      "id": "rule",
      "t": "写进常驻规矩",
-     "x": 680,
-     "y": 1146,
-     "w": 320,
+     "x": 330,
+     "y": 1132,
+     "w": 300,
      "h": 100,
      "hue": "green",
      "size": 40,
      "subSize": 26,
-     "subC": "#495057"
+     "subC": "#3b4248"
     }
    ],
    "edges": [
@@ -266,7 +278,8 @@
      "toSide": "top",
      "bend": 0.0,
      "fromOff": 0,
-     "toOff": 0
+     "toOff": 0,
+     "gap": 30
     },
     {
      "id": "Cc",
@@ -275,7 +288,7 @@
      "fromSide": "bottom",
      "toSide": "top",
      "bend": 0,
-     "fromOff": 0.18,
+     "fromOff": 0.25,
      "toOff": 0
     },
     {
@@ -302,9 +315,9 @@
      "id": "nr",
      "from": "nod",
      "to": "rule",
-     "fromSide": "bottom",
+     "fromSide": "left",
      "toSide": "top",
-     "bend": 0.0,
+     "bend": 0.22,
      "fromOff": 0,
      "toOff": 0
     },
@@ -315,34 +328,35 @@
      "dashed": true,
      "pts": [
       [
-       508,
-       1146
+       158,
+       1136
       ],
       [
-       150,
-       1112
-      ],
-      [
-       34,
-       760
+       66,
+       1088
       ],
       [
        40,
+       760
+      ],
+      [
+       44,
        430
       ],
       [
-       128,
-       270
+       120,
+       276
       ],
       [
        328,
        250
       ]
      ],
-     "label": "第二天继续积累",
+     "width": 4,
+     "label": "第二天\n继续积累",
      "labelAt": [
-      108,
-      1010
+      84,
+      964
      ],
      "labelAlign": "left",
      "labelSize": 28
@@ -372,19 +386,19 @@
     {
      "node": "B",
      "edge": "Bt",
-     "note": "≥2 次才写候选规则",
+     "note": "满 2 次才写候选规则",
      "at": [
-      522,
-      592
+      482,
+      588
      ],
-     "align": "left"
+     "align": "right"
     },
     {
      "node": "test",
      "edge": null,
      "note": "还差 18 个点",
      "at": [
-      450,
+      408,
       842
      ],
      "align": "center"
@@ -434,10 +448,10 @@
      "edge": "back",
      "note": "明天开工就读",
      "at": [
-      902,
-      1060
+      504,
+      1134
      ],
-     "align": "center"
+     "align": "left"
     }
    ]
   }

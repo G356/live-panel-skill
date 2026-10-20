@@ -60,7 +60,7 @@ LP.registerView('excalidraw',{
   var svg=ctx.svg('svg',{width:SW,height:SH,viewBox:'0 0 '+SW+' '+SH}); svg.style.cssText='position:absolute;left:0;top:0;overflow:visible;pointer-events:none';
   W.appendChild(svg);
   function layer(){ var g=ctx.svg('g'); svg.appendChild(g); return g; }
-  var gUnder=layer(), gEdge=layer(), gNode=layer(), gIcon=layer(), gOver=layer(), gCarry=layer();
+  var gZone=layer(), gUnder=layer(), gEdge=layer(), gNode=layer(), gIcon=layer(), gOver=layer(), gCarry=layer();
   var seedN=0; function nextSeed(){ seedN++; return (seed*7919+seedN*104729)%2147483000+1; }
 
   // one rough shape with V boil variants (variant k = base nudged towards an independent sketch by `amp`)
@@ -89,6 +89,10 @@ LP.registerView('excalidraw',{
    var d=div(parent,'left:'+left+'px;top:'+(y-h/2)+'px;width:'+w+'px;font-size:'+sz+'px;line-height:'+lh+'px;text-align:'+(align||'center')+';color:'+col);
    d.textContent=lines.join('\n'); ctx.mark(d,'text'); return d;
   }
+
+  // ---- zones: a pale wash behind a group of boxes (e.g. inner vs outer loop), drawn once, no boil ----
+  (e.zones||[]).forEach(function(Z){ var zf=Z.fill||(Z.hue?hueOf(ctx,Z.hue).fill:'#f1f3f5');
+    shape(gZone,function(o){return gen.path(rrPath(Z.x,Z.y,Z.w,Z.h,Z.r||36),o)},{roughness:Z.roughness!=null?Z.roughness:0.9,strokeWidth:Z.stroke?1.6:0,stroke:Z.stroke?tone(ctx,Z.stroke):'none',fill:zf,fillStyle:'solid',preserveVertices:true,disableMultiStroke:true},{opacity:Z.opacity!=null?Z.opacity:1},true); });
 
   // ---- static texts (title, section labels, asides) ----
   (e.texts||[]).forEach(function(T){ var d=textBlock(W,T.t,T.x,T.y,T.size||28,tone(ctx,T.c),T.align||'center',T.w,T.lh);
@@ -134,10 +138,10 @@ LP.registerView('excalidraw',{
     var t1=div(box,'left:'+pad+'px;top:'+ty+'px;width:'+(n.w-pad*2)+'px;text-align:center;font-size:'+sz+'px;line-height:'+lh+'px;-webkit-text-stroke:'+(n.weight!=null?n.weight:(e.textWeight!=null?e.textWeight:0.5))+'px '+INK+';color:'+INK); t1.textContent=lines.join('\n'); ctx.mark(t1,'text');
     if(subs.length){ var t2=div(box,'left:'+pad+'px;top:'+(ty+lh*lines.length+gap)+'px;width:'+(n.w-pad*2)+'px;text-align:center;font-size:'+ssz+'px;line-height:'+slh+'px;color:'+tone(ctx,n.subC||'muted')); t2.textContent=subs.join('\n'); ctx.mark(t2,'text'); }
     // focus: a pen loop around the box (squircle, ~1.15 turns so the stroke overshoots its start), drawn on like a pen
-    var off=n.focusOff||13, ax=n.w/2+off, ay=n.h/2+off, lp=[], M=44, th0=-2.25+0.4*ctx.hash(seed,i), turns=1.15;
-    for(var j=0;j<=M;j++){ var th=th0+turns*2*Math.PI*j/M, c=Math.cos(th), sn=Math.sin(th), ex=Math.pow(Math.abs(c),0.4)*(c<0?-1:1), ey=Math.pow(Math.abs(sn),0.4)*(sn<0?-1:1), jit=1+0.018*Math.sin(j*1.9+i*3)+0.045*j/M;
-      lp.push([n.x+ax*ex*jit+(j/M)*3, n.y+ay*ey*jit]); }
-    var fo=gen.toPaths(gen.curve(lp,{seed:nextSeed(),roughness:1.1,strokeWidth:3,stroke:H.strong,disableMultiStroke:true}));
+    var off=n.focusOff||13, ax=n.w/2+off, ay=n.h/2+off, lp=[], per=2*(2*ax+2*ay)*0.93, ovl=e.focusOverlap||44, turns=1+ovl/per, M=Math.round(48*turns), th0=-2.25+0.4*ctx.hash(seed,i), wob=e.focusWobble!=null?e.focusWobble:3;
+    for(var j=0;j<=M;j++){ var th=th0+turns*2*Math.PI*j/M, c=Math.cos(th), sn=Math.sin(th), ex=Math.pow(Math.abs(c),0.4)*(c<0?-1:1), ey=Math.pow(Math.abs(sn),0.4)*(sn<0?-1:1), jit=1+0.03*j/M;
+      lp.push([n.x+ax*ex*jit+(j/M)*3+wob*Math.sin(th*3+i*1.7), n.y+ay*ey*jit+wob*Math.sin(th*5+i*2.3)]); }
+    var fo=gen.toPaths(gen.curve(lp,{seed:nextSeed(),roughness:e.focusRough!=null?e.focusRough:0.9,strokeWidth:3,stroke:H.strong,disableMultiStroke:true}));
     var fg=ctx.svg('g'); fg.style.display='none'; gOver.appendChild(fg);
     var fps=fo.map(function(p){ var pa=ctx.svg('path',{d:p.d,stroke:H.strong,'stroke-width':3,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'}); fg.appendChild(pa); return pa; });
     var flen=fps.map(function(pa){ return pa.getTotalLength(); });
@@ -169,7 +173,7 @@ LP.registerView('excalidraw',{
     if(dashed){ var st0=cl.getPointAtLength(Math.max(0,len-15)); shape(gEdge,function(o){return gen.line(st0.x,st0.y,tip[0],tip[1],o)},Object.assign({},op,{roughness:0.4})); }
     if(dashed) S.dash.push({gs:body.gs,cyc:18+sw,n:Math.max(1,Math.round(period*(E.dashSpeed||16)/(18+sw)))});
     // pen overlay: the same stroke in the source hue, drawn on behind the carrier
-    var src=A?A.H:hueOf(ctx,'gray'), ovo=Object.assign({},op,{seed:nextSeed(),stroke:src.strong,strokeWidth:sw+1,disableMultiStroke:true}), ov=gen.toPaths(P.length===2?gen.line(P[0][0],P[0][1],P[1][0],P[1][1],ovo):gen.curve(P,ovo))[0];
+    var src=A?A.H:hueOf(ctx,'gray'), ov=body.base[0];
     var opa=ctx.svg('path',{d:ov.d,stroke:src.strong,'stroke-width':sw+1,fill:'none','stroke-linecap':'round'}); opa.style.display='none'; gOver.appendChild(opa);
     var olen=opa.getTotalLength();
     // carrier: a dot for solid arrows, a little paper note for dashed ones
@@ -187,7 +191,7 @@ LP.registerView('excalidraw',{
   // ---- steps: one protagonist at a time (node focus + handwritten note, then its arrow is inked and carried) ----
   var steps=e.steps||[], wsum=steps.reduce(function(a,st){return a+(st.dur||1)},0)||1, acc0=0;
   S.starts=steps.map(function(st){ var t0=acc0; acc0+=period*(st.dur||1)/wsum; return t0; }); S.durs=steps.map(function(st){return period*(st.dur||1)/wsum});
-  var D=period/(steps.length||1); S.D=D; S.fade=Math.min(0.35,D*0.2);
+  var D=period/(steps.length||1); S.D=D; S.fade=Math.min(0.35,D*0.2); S.gap=e.focusGap!=null?e.focusGap:0.12;
   steps.forEach(function(st,i){ var N_=S.nodes[st.node]; if(!N_){ S.problems.push('step '+(i+1)+': unknown node "'+st.node+'"'); return; }
     var ed=st.edge?S.edges[st.edge]:null; if(st.edge&&!ed) S.problems.push('step '+(i+1)+': unknown edge "'+st.edge+'"');
     if(ed&&ed.E.from&&ed.E.from!==st.node) S.problems.push('step '+(i+1)+': edge '+st.edge+' does not leave '+st.node);
@@ -216,12 +220,16 @@ LP.registerView('excalidraw',{
   function show(st,ph,op,isCur){ // ph: phase 0..1 of that step, op: opacity
    var N_=st.node, dw=st.dwell;
    // focus outline drawn on during the first 70% of the dwell
-   var dq=Math.min(dw,0.45); var q=LP.ease.inOut(clamp(ph/(dq*0.75))); N_.fg.style.display=''; N_.fg.style.opacity=op;
-   var tot=N_.flen.reduce(function(a,b){return a+b},0), acc=0;
-   N_.fps.forEach(function(pa,j){ var L=N_.flen[j], u=clamp((q*tot-acc)/L); acc+=L; pa.setAttribute('stroke-dasharray',L.toFixed(1)+' '+(L+2).toFixed(1)); pa.setAttribute('stroke-dashoffset',(L*(1-u)).toFixed(1)); });
-   var nd=isCur?S.fade/D:0; if(st.note&&ph>=nd){ var r=clamp((ph-nd)/Math.max(0.2,dq*0.8)); st.note.style.display=''; st.note.style.opacity=op; st.note.style.clipPath='inset(-20% '+((1-LP.ease.out(r))*100).toFixed(1)+'% -20% -4%)'; }
+   var dq=Math.min(dw,0.45), ps=isCur?(S.fade+S.gap)/D:0; var q=LP.ease.inOut(clamp((ph-ps)/(dq*0.75)));
+   if(q>0.002){ N_.fg.style.display=''; N_.fg.style.opacity=op;
+     var tot=N_.flen.reduce(function(a,b){return a+b},0), acc=0;
+     N_.fps.forEach(function(pa,j){ var L=N_.flen[j], u=clamp((q*tot-acc)/L); acc+=L; pa.style.display=u>0.002?'':'none'; pa.setAttribute('stroke-dasharray',L.toFixed(1)+' '+(L+2).toFixed(1)); pa.setAttribute('stroke-dashoffset',(L*(1-u)).toFixed(1)); }); }
+   var nd=isCur?(S.fade+S.gap)/D:0; if(st.note&&ph>=nd){ var r=clamp((ph-nd)/Math.max(0.2,dq*0.8)); st.note.style.display=''; st.note.style.opacity=op; st.note.style.clipPath='inset(-20% '+((1-LP.ease.out(r))*100).toFixed(1)+'% -20% -4%)'; }
    if(st.edge){ var E=st.edge, u=LP.ease.inOut(clamp((ph-dw)/(0.96-dw)));
-     if(ph>dw){ E.ov.style.display=''; E.ov.style.opacity=op*(E.dashed?0.0:1); E.ov.setAttribute('stroke-dasharray',E.olen.toFixed(1)+' '+(E.olen+2).toFixed(1)); E.ov.setAttribute('stroke-dashoffset',(E.olen*(1-u)).toFixed(1));
+     // fading out (previous step): the ink retracts from its tail towards the head at full strength, so it never
+     // turns into a translucent colour over the black line
+     if(ph>dw){ E.ov.style.display=(u>0.01&&op>0.02)?'':'none'; E.ov.style.opacity=E.dashed?0:1; E.ov.setAttribute('stroke-dasharray',E.olen.toFixed(1)+' '+(E.olen+2).toFixed(1));
+       E.ov.setAttribute('stroke-dashoffset',(op<1?-(E.olen+2)*(1-op)*0.999:E.olen*(1-u)).toFixed(1));
        var f=u*E.N, i0=Math.min(E.N-1,Math.floor(f)), w=f-i0, a=E.smp[i0], b=E.smp[i0+1], x=a[0]+(b[0]-a[0])*w, y=a[1]+(b[1]-a[1])*w;
        var arrive=clamp((ph-0.9)/0.1); E.car.style.display=''; E.car.style.opacity=(op*(1-0.6*arrive)).toFixed(3);
        E.car.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+')'+(E.dashed?' rotate('+(-6+4*Math.sin(u*Math.PI*2)).toFixed(1)+')':'')); } }

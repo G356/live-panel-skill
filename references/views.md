@@ -261,15 +261,19 @@ Fonts: body text uses `TH.font` (CSS var `--font`). Titles/big numbers may use `
   bundled inside the view file, fixed seeds). Keys: `period`, `t0` (start offset, so frame 0 can be any moment of the
   loop), `seed`, `roughness` (1.35), `strokeWidth` (2.6), `edgeRough` (0.9), `edgeGap` (22, room for the focus loop),
   `edgeMulti` (true: a second, shorter pen stroke on solid arrows), `textWeight` (0.5), `noteSize`,
-  `boil:{step,variants,amp}` (0.125 s, 4, 0.6; `period/step` must be a whole multiple of `variants`),
+  `boil:{step,variants,amp}` (0.125 s, 4, 0.35; `period/step` must be a whole multiple of `variants`),
+  `zones:[{x,y,w,h,fill|hue,r?,stroke?,opacity?}]` (pale washes behind a group of boxes, e.g. inner vs outer loop; drawn once, no boil),
+  `focusOverlap` (44 px: how far the pen loop runs past its start), `focusWobble` (3 px), `focusRough` (0.9), `focusGap` (0.12 s),
   `texts:[{t,x,y,size,c,align,w,lh,rot,weight,underline:{hue?,width,dy,tilt}}]`, `icons:[{kind:laptop|cloud|sprout|server|person,x,y,w}]`,
   `nodes:[{id,t,sub?,x,y,w,h,hue,size?,subSize?,subC?,r?,weight?}]` (hue blue|green|red|yellow|violet|gray|white = Excalidraw
   palette index 1 fills, overridable per theme with colours `x<hue>`, `x<hue>s`, `x<hue>d`),
   `edges:[{id,from,to,fromSide,toSide,fromOff,toOff,bend,width?,dashed?,label?,labelAt?,labelAlign?} | {id,pts:[[x,y],...]}]`,
-  `steps:[{node,edge?,note?,at?,align?,dur?}]`. Motion: everything boils; dashed edges march (a whole number of dash
+  `steps:[{node,edge?,note?,at?,align?,dur?,dwell?}]` (`dwell`: share of the step before its edge is inked; 0.4 with an edge, 1 without). Motion: everything boils; dashed edges march (a whole number of dash
   cycles per period); exactly one step is the protagonist: its box gets a pen loop (drawn on), its note is handwritten in
-  next to it, then its edge is inked in the box's strong colour behind a dot (solid) or a paper note (dashed); the previous
-  step fades over 0.35 s. The look is plain config: `theme.preset:"light-pastel"`, `theme.font:"Excalifont, Xiaolai, ..."`,
+  next to it, then its edge is inked in the box's strong colour (on the arrow's own stroke) behind a dot (solid) or a paper note
+  (dashed). The previous step fades over 0.35 s (its ink retracts from tail to head at full colour) and the new pen loop starts
+  only `focusGap` after that, so two loops never overlap. The examples use `roughness` 1.05, `edgeRough` 0.8, `edgeMulti:false`
+  (single-stroke arrows like the reference) and pastel fills sampled from the AQuA reference (`xblue:#b8d3ec` etc.). The look is plain config: `theme.preset:"light-pastel"`, `theme.font:"Excalifont, Xiaolai, ..."`,
   `theme.fonts` with `Excalifont-Regular-Latin.woff2` (OFL, in assets/fonts) and `Xiaolai-Regular.ttf` (OFL, fetch with
   `scripts/fetch_fonts.sh`; subset per config by build_page).
 - **kpi**: `cards:[{label,value,unit?,delta?,series:[numbers],status?}]`, grid auto-chosen by count
